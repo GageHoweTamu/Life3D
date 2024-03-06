@@ -2,7 +2,7 @@
 
 use rand::Rng;
 
-use crate::{cell::{Cell, CellType}, Brain};
+use crate::cell::{Cell, CellType};
 
 pub struct Organism {
     pub cells: Vec<Cell>,
@@ -18,7 +18,7 @@ pub struct Organism {
 impl Organism {
     pub fn new() -> Organism {
         Organism {
-            cells: vec![Cell::new(CellType::Body, 1, 1, 0)],
+            cells: vec![Cell::new(CellType::Eater, 1, 1, 0)],
             brain: Brain {
                 aggression: 0.5,
                 hunger: 0.5,
@@ -36,10 +36,29 @@ impl Organism {
         let cell_index = rng.gen_range(0..self.cells.len());
         self.cells[cell_index].mutate();
     }
-    pub fn teleport_random (&mut self) { // moves the organism randomly
+    pub fn teleport_random(&mut self) {
         let mut rng = rand::thread_rng();
-        self.x += rng.gen_range(-1..2);
-        self.y += rng.gen_range(-1..2);
-        self.z += rng.gen_range(-1..2);
+        let dx = rng.gen_range(-1..2);
+        let dy = rng.gen_range(-1..2);
+        let dz = rng.gen_range(-1..2);
+
+        self.x += dx;
+        self.y += dy;
+        self.z += dz;
+
+        for cell in &mut self.cells {
+            cell.shift(dx, dy, dz);
+        }
     }
+}
+
+pub struct Brain {
+    pub aggression: f32,    // How likely the organism is to attack
+                            // 0.0: never attacks
+                            // 0.5: attacks smaller organisms (default)
+                            // 1.0: attacks everything
+    pub hunger: f32, // How likely the organism is to pursue food in spite of danger
+                        // 0.0: never pursues food
+                        // 0.5: pursues food if not in danger (default)
+                        // 1.0: always pursues food
 }

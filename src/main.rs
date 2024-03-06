@@ -53,12 +53,15 @@ fn main() {
 
         for organism in &mut organisms {
             organism.teleport_random();
-            let mut x = window.add_cube(1.0, 1.0, 1.0);
-            
-            x.set_color(1.0, 0.0, 0.0);
 
-            let t = Vector3::new(organism.x as f32, organism.y as f32, organism.z as f32);
-            x.set_local_translation(kiss3d::nalgebra::Translation { vector: t });
+            for cell in &organism.cells {
+                let mut x = window.add_cube(1.0, 1.0, 1.0);
+                x.set_color(1.0, 0.4, 0.4);
+
+                println!("Cell at: {}, {}, {}", cell.local_x, cell.local_y, cell.local_z);
+            }
+
+
             println!("Organism at: {}, {}, {}", organism.x, organism.y, organism.z);
         }
 
