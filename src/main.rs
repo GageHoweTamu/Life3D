@@ -41,8 +41,9 @@ fn main() {
 
     organisms.push(Organism::new());
 
-    let mut window = Window::new("Kiss3d Window");
+    let mut window = Window::new("Main Window");
     window.set_light(Light::StickToCamera);
+    window.set_framerate_limit(Some(60));
 
     while window.render() { // main loop
         println!("Rendering window");

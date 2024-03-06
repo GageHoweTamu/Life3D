@@ -12,7 +12,6 @@ pub struct Organism {
     pub x: i8,
     pub y: i8,
     pub z: i8,
-    aggressiveness: f32, // 0.0 to 1.0
 }
 
 impl Organism {
@@ -25,7 +24,6 @@ impl Organism {
             x: 0,
             y: 0,
             z: 0,
-            aggressiveness: 0.0,
         }
     }
     pub fn mutate(&mut self) {
