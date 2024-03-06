@@ -2,11 +2,10 @@
 
 use rand::Rng;
 
-use crate::cell::{Cell, CellType};
+use crate::cell::{Cell, CellType, Brain};
 
 pub struct Organism {
     pub cells: Vec<Cell>,
-    pub brain: Brain,
     health: f32,
     energy: f32,
     age: u32,
@@ -14,15 +13,15 @@ pub struct Organism {
     pub y: i8,
     pub z: i8,
 }
-
 impl Organism {
     pub fn new() -> Organism {
+        let brain = Brain {
+            aggression: 0.5,
+            hunger: 0.5,
+        };
+        let brain_cell = Cell::new(CellType::Brain(brain), 0, 0, 0);
         Organism {
-            cells: vec![Cell::new(CellType::Eater, 1, 1, 0)],
-            brain: Brain {
-                aggression: 0.5,
-                hunger: 0.5,
-            },
+            cells: vec![brain_cell, Cell::new(CellType::Eater, 1, 1, 0)],
             health: 100.0,
             energy: 100.0,
             age: 0,
@@ -50,15 +49,4 @@ impl Organism {
             cell.shift(dx, dy, dz);
         }
     }
-}
-
-pub struct Brain {
-    pub aggression: f32,    // How likely the organism is to attack
-                            // 0.0: never attacks
-                            // 0.5: attacks smaller organisms (default)
-                            // 1.0: attacks everything
-    pub hunger: f32, // How likely the organism is to pursue food in spite of danger
-                        // 0.0: never pursues food
-                        // 0.5: pursues food if not in danger (default)
-                        // 1.0: always pursues food
 }
