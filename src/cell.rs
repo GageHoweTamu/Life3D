@@ -1,22 +1,22 @@
 // defines the cells the organisms are made of
 use rand::Rng;
 
-pub struct Brain {
-    pub aggression: f32,    // How likely the organism is to attack
+pub struct Brain { // the brain is the core of the organism
+    pub aggression: f32,
                             // 0.0: never attacks
                             // 0.5: attacks smaller organisms (default)
                             // 1.0: attacks everything
-    pub hunger: f32, // How likely the organism is to pursue food in spite of danger
+    pub hunger: f32,
                         // 0.0: never pursues food
                         // 0.5: pursues food if not in danger (default)
                         // 1.0: always pursues food
 }
 pub enum CellType {
-    Body,
     Eye,
     Armor,
     Damager,
-    Brain(Brain),
+    Eater,
+    Producer,
 }
 
 pub struct Cell {
@@ -37,15 +37,13 @@ impl Cell {
     }
     pub fn mutate(&mut self) {
         let mut rng = rand::thread_rng();
-        let cell_type = match rng.gen_range(0..5) {
+        let cell_type = match rng.gen_range(0..6) {
             0 => CellType::Body,
             1 => CellType::Eye,
             2 => CellType::Armor,
             3 => CellType::Damager,
-            _ => CellType::Brain(Brain {
-                aggression: rng.gen_range(0.0..1.0),
-                hunger: rng.gen_range(0.0..1.0),
-            }),
+            4 => CellType::Producer,
+            _ => CellType::Eater,
         };
         self.cell_type = cell_type;
     }
