@@ -21,7 +21,7 @@ pub enum CellType {
 }
 
 pub struct Cell {
-    cell_type: CellType,
+    pub cell_type: CellType,
     pub local_x: i8,
     pub local_y: i8,
     pub local_z: i8,

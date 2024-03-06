@@ -24,17 +24,16 @@ fn main() {
 
     let mut window = Window::new("Main Window");
     window.set_light(Light::StickToCamera);
-    window.set_framerate_limit(Some(60));
+    window.set_framerate_limit(Some(5));
     let mut camera = FirstPerson::new(Point3::new(0.0, 0.0, 0.0).into(), Point3::new(0.0, 0.0, 0.0).into());
     camera.set_move_step(5.0);
     camera.set_pitch_step(0.01);
     camera.set_yaw_step(0.01);
 
     let mut parent_objects = Vec::new();
-    // ...
 
-    while window.render() { // main loop
-        println!("Rendering window");
+    while window.render() {
+        println!("________Rendering window________");
 
         // Remove existing parent nodes
         for mut parent in parent_objects.drain(..) {
@@ -44,27 +43,29 @@ fn main() {
         for organism in &mut organisms {
             organism.teleport_random();
 
-            // Create a parent node for the organism
             let mut parent = window.add_group();
 
             for cell in &organism.cells {
-                // Create a cube for each cell and add it to the parent node
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
-                cube.set_color(1.0, 0.4, 0.4);
+                // make a match statement for the cell colors
+                match cell.cell_type {
+                    CellType::Brain(_) => cube.set_color(0.8, 0.1, 0.1),
+                    CellType::Eye => cube.set_color(1.0, 1.0, 1.0),
+                    CellType::Armor => cube.set_color(1.0, 1.0, 0.0),
+                    CellType::Damager => cube.set_color(1.0, 0.0, 0.0),
+                    CellType::Eater => cube.set_color(0.8, 0.8, 0.0),
+                    CellType::Producer => cube.set_color(0.0, 1.0, 0.0),
+                };
                 cube.append_translation(&Translation3::new(cell.local_x as f32, cell.local_y as f32, cell.local_z as f32));
-
-                println!("Cell at: {}, {}, {}", cell.local_x, cell.local_y, cell.local_z);
             }
 
-            // Add the parent node to parent_objects so it can be removed in the next iteration
             parent_objects.push(parent);
 
             println!("Organism at: {}, {}, {} with {} cells", organism.x, organism.y, organism.z, organism.cells.len());
         }
 
         world_timer += 1;
-        println!("World age: {}", world_timer);
-        println!("finished rendering");
+        // println!("World age: {}", world_timer);
     }
 }
 
