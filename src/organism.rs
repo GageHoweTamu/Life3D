@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::cell::{Cell, CellType, Brain};
 
-pub struct Organism {
+pub struct Organism { // an organism is a collection of cells, including a brain.
     pub cells: Vec<Cell>,
     health: f32,
     energy: f32,
