@@ -3,7 +3,7 @@
 use kiss3d::scene::SceneNode;
 use rand::Rng;
 
-use kiss3d::nalgebra::{Translation, UnitQuaternion, Vector3, Point3};
+use kiss3d::nalgebra::{Translation3, UnitQuaternion, Vector3, Point3};
 use kiss3d::window::Window;
 use kiss3d::light::Light;
 use kiss3d::camera::FirstPerson;
@@ -31,26 +31,33 @@ fn main() {
     camera.set_yaw_step(0.01);
 
     let mut parent_objects = Vec::new();
+    // ...
 
     while window.render() { // main loop
         println!("Rendering window");
 
-        for mut parents in parent_objects.drain(..) { // delete each organism's scene node
-            window.remove_node(&mut parents);
+        // Remove existing parent nodes
+        for mut parent in parent_objects.drain(..) {
+            window.remove_node(&mut parent);
         }
-
-        // pub fn new(eye: Point3<f32>, at: Point3<f32>) -> FirstPerson
-        
-        // 
 
         for organism in &mut organisms {
             organism.teleport_random();
-            // make a node for each organism
-            
-            // for each cell in the organism, make a cube (child node)
 
+            // Create a parent node for the organism
+            let mut parent = window.add_group();
 
+            for cell in &organism.cells {
+                // Create a cube for each cell and add it to the parent node
+                let mut cube = parent.add_cube(1.0, 1.0, 1.0);
+                cube.set_color(1.0, 0.4, 0.4);
+                cube.append_translation(&Translation3::new(cell.local_x as f32, cell.local_y as f32, cell.local_z as f32));
 
+                println!("Cell at: {}, {}, {}", cell.local_x, cell.local_y, cell.local_z);
+            }
+
+            // Add the parent node to parent_objects so it can be removed in the next iteration
+            parent_objects.push(parent);
 
             println!("Organism at: {}, {}, {} with {} cells", organism.x, organism.y, organism.z, organism.cells.len());
         }
