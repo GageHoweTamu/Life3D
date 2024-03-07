@@ -45,10 +45,7 @@ impl Organism {
         self.x += dx;
         self.y += dy;
         self.z += dz;
-
-        for cell in &mut self.cells {
-            cell.shift(dx, dy, dz);
-        }
+        
     }
     pub fn reproduce(&self) -> Organism { // this currently does not mutate
         let mut new_organism = Organism::new();

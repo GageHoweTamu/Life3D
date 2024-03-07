@@ -17,6 +17,13 @@ impl Producer {
         Block::new(BlockType::Food, 0, 0, 0)
     }
 }
+pub struct Eye {}
+impl Eye {
+    // returns number of food blocks and killer cells in front of the eye
+    pub fn look(&self) {
+        println!("Detected: ...");
+    }
+}
 
 #[derive(Debug)]
 #[derive(Clone)]

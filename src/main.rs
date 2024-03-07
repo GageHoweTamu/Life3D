@@ -49,7 +49,7 @@ fn main() {
             window.remove_node(&mut parent);
         }
 
-        if frame_counter % 6 = 0 { } // every 6 frames, update the world
+        if frame_counter % 6 == 0 { } // every 6 frames, update the world
 
         let mut new_organisms = Vec::new();
         let num_organisms = organisms.len();
@@ -79,14 +79,14 @@ fn main() {
             for cell in &organism.cells {                                       // manage rendering
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
                 match cell.cell_type {
-                    CellType::Brain(_) => cube.set_color(0.8, 0.1, 0.1),
+                    CellType::Brain(_) => cube.set_color(1.0, 0.3, 0.3),
                     CellType::Eye => cube.set_color(1.0, 1.0, 1.0),
                     CellType::Armor => cube.set_color(1.0, 1.0, 0.0),
                     CellType::Damager => cube.set_color(1.0, 0.0, 0.0),
                     CellType::Eater => cube.set_color(0.8, 0.8, 0.0),
                     CellType::Producer(_) => cube.set_color(0.0, 1.0, 0.0),
                 };
-                cube.append_translation(&Translation3::new(cell.local_x as f32, cell.local_y as f32, cell.local_z as f32));
+                cube.append_translation(&Translation3::new((organism.x + cell.local_x) as f32, (organism.y + cell.local_y) as f32, (organism.z + cell.local_z) as f32));
             }
             for block in &blocks {
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);

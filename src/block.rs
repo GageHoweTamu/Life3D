@@ -1,10 +1,12 @@
 // blocks not attached to any organism
 
+#[derive(Clone)]
 pub enum BlockType {
     Food,
     Wall,
 }
 
+#[derive(Clone)]
 pub struct Block {
     pub block_type: BlockType,
     pub x: i8,
