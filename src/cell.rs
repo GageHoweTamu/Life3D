@@ -34,6 +34,56 @@ impl Eye {
         //(0, 0)
     }
     */
+    pub fn look(&self, world: &World, x: usize, y: usize, z: usize) -> (i32, i32) {
+        let mut food_blocks = 0;
+        let mut killer_cells = 0;
+
+        // Define the direction of look based on rotation
+        let (dx, dy, dz) = match self.rotation {
+            0 => (1, 0, 0),  // forward
+            1 => (-1, 0, 0), // backward
+            2 => (0, 1, 0),  // left
+            3 => (0, -1, 0), // right
+            4 => (0, 0, 1),  // up
+            5 => (0, 0, -1), // down
+            _ => (0, 0, 0),  // invalid rotation
+        };
+
+        // Start from the current position and move in the direction of look
+        let mut current_x = x as i32;
+        let mut current_y = y as i32;
+        let mut current_z = z as i32;
+
+        // Continue looking as long as we're within the bounds of the world
+        while current_x >= 0 && current_x < world.width as i32
+            && current_y >= 0 && current_y < world.height as i32
+            && current_z >= 0 && current_z < world.depth as i32
+        {
+            if let Some(entity) = world.get_entity(current_x as usize, current_y as usize, current_z as usize) {
+                match entity {
+                    Entity::Block(block) => {
+                        if block.block_type == BlockType::Food {
+                            food_blocks += 1;
+                        }
+                    }
+                    Entity::Cell(cell) => {
+                        if let CellType::Brain(brain) = &cell.cell_type {
+                            if brain.aggression > 0.5 {
+                                killer_cells += 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Move to the next position in the direction of look
+            current_x += dx;
+            current_y += dy;
+            current_z += dz;
+        }
+
+        (food_blocks, killer_cells)
+    }
 }
 
 #[derive(Debug)]
