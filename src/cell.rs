@@ -1,6 +1,7 @@
 // defines the cells the organisms are made of
 use rand::Rng;
 use crate::block::{Block, BlockType};
+use crate::world::{World, Entity};
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -63,7 +64,7 @@ impl Eye {
                 match entity {
                     Entity::Block(block) => {
                         if block.block_type == BlockType::Food {
-                            food_blocks += 1;
+                            food_blocks += 1; 
                         }
                     }
                     Entity::Cell(cell) => {

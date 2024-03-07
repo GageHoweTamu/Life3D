@@ -11,10 +11,10 @@ pub enum Entity {
 }
 
 pub struct World {
-    grid: Vec<Vec<Vec<Option<Entity>>>>,
-    width: usize,
-    height: usize,
-    depth: usize,
+    pub grid: Vec<Vec<Vec<Option<Entity>>>>,
+    pub width: usize,
+    pub height: usize,
+    pub depth: usize,
 }
 impl World {
     pub fn new(width: usize, height: usize, depth: usize) -> World {
