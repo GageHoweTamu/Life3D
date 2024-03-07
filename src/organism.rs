@@ -1,11 +1,11 @@
 // defines the organisms in the world
 
 use rand::Rng;
-
+// use octree_rs::Octree;
 use crate::cell::{Cell, CellType, Brain};
 
 pub struct Organism { // an organism is a collection of cells, including a brain.
-    pub cells: Vec<Cell>,
+    pub cells: Vec<Cell>, 
     health: f32,
     energy: f32,
     age: u32,
@@ -48,5 +48,13 @@ impl Organism {
         for cell in &mut self.cells {
             cell.shift(dx, dy, dz);
         }
+    }
+    pub fn reproduce(&self) -> Organism { // this currently does not mutate
+        let mut new_organism = Organism::new();
+        new_organism.cells = self.cells.clone();
+        new_organism.x = self.x + rand::thread_rng().gen_range(-10..11);
+        new_organism.y = self.y + rand::thread_rng().gen_range(-10..11);
+        new_organism.z = self.z + rand::thread_rng().gen_range(-10..11);
+        new_organism
     }
 }

@@ -1,6 +1,7 @@
 // defines the cells the organisms are made of
 use rand::Rng;
 
+#[derive(Clone)]
 pub struct Brain {
     pub aggression: f32,    // How likely the organism is to attack
                             // 0.0: never attacks
@@ -11,6 +12,14 @@ pub struct Brain {
                         // 0.5: pursues food if not in danger (default)
                         // 1.0: always pursues food
 }
+pub struct Producer {}
+impl Producer {
+    pub fn produce(&self) -> Cell {
+        Cell::new(CellType::Food, 0, 0, 0)
+    }
+}
+
+#[derive(Clone)]
 pub enum CellType {
     Brain(Brain), // The brain cell is the first cell in the organism, and cannot be removed
     Eye,
@@ -20,6 +29,7 @@ pub enum CellType {
     Producer,
 }
 
+#[derive(Clone)]
 pub struct Cell {
     pub cell_type: CellType,
     pub local_x: i8,
@@ -59,5 +69,23 @@ impl Cell {
         self.local_x += x;
         self.local_y += y;
         self.local_z += z;
+    }
+    pub fn clone(&self) -> Cell { // this may not be needed
+        let mut temp = Cell {
+            cell_type: self.cell_type.clone(),
+            local_x: self.local_x,
+            local_y: self.local_y,
+            local_z: self.local_z,
+        };
+        match &self.cell_type {
+            CellType::Brain(x) => {
+                if let CellType::Brain(y) = &mut temp.cell_type {
+                    y.aggression = x.aggression;
+                    y.hunger = x.hunger;
+                }
+            }
+            _ => {}
+        }
+        temp
     }
 }
