@@ -3,6 +3,7 @@
 use rand::Rng;
 // use octree_rs::Octree;
 use crate::cell::{Cell, CellType, Brain};
+use crate::block::{Block, BlockType};
 
 pub struct Organism { // an organism is a collection of cells, including a brain.
     pub cells: Vec<Cell>, 
@@ -56,5 +57,18 @@ impl Organism {
         new_organism.y = self.y + rand::thread_rng().gen_range(-10..11);
         new_organism.z = self.z + rand::thread_rng().gen_range(-10..11);
         new_organism
+    }
+    pub fn produce_food(&mut self) -> Option<Block> {
+        let mut rng = rand::thread_rng();
+        for cell in &self.cells {
+            if let CellType::Producer(_) = cell.cell_type {
+                let dx = rng.gen_range(-1..2);
+                let dy = rng.gen_range(-1..2);
+                let dz = rng.gen_range(-1..2);
+                println!("Producing food at ({}, {}, {})", self.x + dx, self.y + dy, self.z + dz);
+                return Some(Block::new(BlockType::Food, self.x + dx, self.y + dy, self.z + dz));
+            }
+        }
+        None
     }
 }
