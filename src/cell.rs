@@ -17,19 +17,30 @@ impl Producer {
         Block::new(BlockType::Food, 0, 0, 0)
     }
 }
-pub struct Eye {}
+
+#[derive(Debug)]
+#[derive(Clone)]
+pub struct Eye {
+    pub rotation: i8,   // 0: forward, 1: backward, 2: left, 3: right, 4: up, 5: down
+                        // This determines where the eye looks in the look() function
+}
 impl Eye {
-    // returns number of food blocks and killer cells in front of the eye
-    pub fn look(&self) {
+    /*
+    pub fn look(&self) -> (i8, i8) { // returns number of food blocks and killer cells in front of the eye
+        // look logic
+        // scans the grid in the direction of rotation
+        // looks for food blocks and killer cells
         println!("Detected: ...");
+        //(0, 0)
     }
+    */
 }
 
 #[derive(Debug)]
 #[derive(Clone)]
 pub enum CellType {
     Brain(Brain), // The brain cell is the first cell in the organism, and cannot be removed
-    Eye,
+    Eye(Eye),
     Armor,
     Damager,
     Eater,
@@ -62,7 +73,7 @@ impl Cell {
             }
             _ => {
                 let mutated_type = match rng.gen_range(0..6) {
-                    1 => CellType::Eye,
+                    1 => CellType::Eye(Eye { rotation: rng.gen_range(0..6) }),
                     2 => CellType::Armor,
                     3 => CellType::Damager,
                     4 => CellType::Eater,

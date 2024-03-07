@@ -2,7 +2,7 @@
 
 use rand::Rng;
 // use octree_rs::Octree;
-use crate::cell::{Cell, CellType, Brain};
+use crate::cell::{Cell, CellType, Brain, Eye, Producer};
 use crate::block::{Block, BlockType};
 
 pub struct Organism { // an organism is a collection of cells, including a brain.
@@ -33,8 +33,16 @@ impl Organism {
     }
     pub fn mutate(&mut self) { // mutates a random cell
         let mut rng = rand::thread_rng();
-        let cell_index = rng.gen_range(0..self.cells.len());
-        self.cells[cell_index].mutate();
+        // determine whether to add a cell or mutate an existing one
+    
+        match rng.gen_range(0..2) {
+            0 => self.add_random_cell(),
+            1 => {
+                let cell_index = rng.gen_range(0..self.cells.len());
+                self.cells[cell_index].mutate();
+            },
+            _ => (),
+        }
     }
     pub fn teleport_random(&mut self) {
         let mut rng = rand::thread_rng();
@@ -45,7 +53,7 @@ impl Organism {
         self.x += dx;
         self.y += dy;
         self.z += dz;
-        
+
     }
     pub fn reproduce(&self) -> Organism { // this currently does not mutate
         let mut new_organism = Organism::new();
@@ -67,5 +75,20 @@ impl Organism {
             }
         }
         None
+    }
+    pub fn add_random_cell(&mut self) {
+        let mut rng = rand::thread_rng();
+        let cell_type = match rng.gen_range(0..5) {
+            0 => CellType::Eye(Eye { rotation: rng.gen_range(0..6) }),
+            1 => CellType::Armor,
+            2 => CellType::Damager,
+            3 => CellType::Eater,
+            4 => CellType::Producer(Producer {}),
+            _ => CellType::Eater,
+        };
+        let dx = rng.gen_range(-1..2);
+        let dy = rng.gen_range(-1..2);
+        let dz = rng.gen_range(-1..2);
+        self.cells.push(Cell::new(cell_type, dx, dy, dz));
     }
 }
