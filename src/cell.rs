@@ -1,4 +1,23 @@
-// defines the cells the organisms are made of
+/*
+
+TODO:
+- [ ] Implement cell energy
+- [ ] Implement cell health
+- [ ] Implement cell age
+- [ ] Implement cell reproduction
+    - [ ] Reproduction should be cancelled if the organism spawns inside another entity
+    - [ ] Reproduction should diminish the energy of the parent organism
+- [x] Implement cell mutation
+- [ ] Finish eye behavior (looks forward and counts food and killer cells in the line of sight)
+- [ ] Finish eater behavior (destroys food blocks and adds energy and health to the organism)
+- [ ] Implement killer behavior (damages organisms when in contact with their cells)
+- [ ] Implement organism death
+    - [ ] an organism dies when its health, energy, or lifespan reaches 0
+- [ ] Implement organism movement
+    - [ ] When an organism moves, update the world grid
+
+*/
+
 use rand::Rng;
 use crate::block::{Block, BlockType};
 use crate::world::{World, Entity};

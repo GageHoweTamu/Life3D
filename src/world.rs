@@ -26,11 +26,11 @@ impl World {
             depth,
         }
     }
-    pub fn set_entity(&mut self, x: usize, y: usize, z: usize, entity: Entity) {
+    pub fn set_entity(&mut self, x: usize, y: usize, z: usize, entity: Option<Entity>) {
         if x < self.width && y < self.height && z < self.depth {
-            self.grid[x][y][z] = Some(entity);
+            self.grid[x][y][z] = entity;
         } else {
-            println!("Coordinates out of bounds");
+            println!("OOB in set_entity ");
         }
     }
 
@@ -38,8 +38,34 @@ impl World {
         if x < self.width && y < self.height && z < self.depth {
             self.grid[x][y][z].as_ref()
         } else {
-            println!("Coordinates out of bounds");
+            // print!("OOB in get_entity ");
             None
         }
+    }
+    pub fn get_adjacent_entities(&self, x: usize, y: usize, z: usize) -> Vec<((usize, usize, usize), &Entity)> {
+        let mut adjacent_entities = Vec::new();
+        let offsets = [
+            (-1, -1, -1), (0, -1, -1), (1, -1, -1),
+            (-1, 0, -1), (0, 0, -1), (1, 0, -1),
+            (-1, 1, -1), (0, 1, -1), (1, 1, -1),
+            (-1, -1, 0), (0, -1, 0), (1, -1, 0),
+            (-1, 0, 0), (1, 0, 0),
+            (-1, 1, 0), (0, 1, 0), (1, 1, 0),
+            (-1, -1, 1), (0, -1, 1), (1, -1, 1),
+            (-1, 0, 1), (0, 0, 1), (1, 0, 1),
+            (-1, 1, 1), (0, 1, 1), (1, 1, 1),
+        ];
+
+        for (dx, dy, dz) in offsets.iter() {
+            let nx = (x as isize + dx) as usize;
+            let ny = (y as isize + dy) as usize;
+            let nz = (z as isize + dz) as usize;
+
+            if let Some(entity) = self.get_entity(nx, ny, nz) {
+                adjacent_entities.push(((nx, ny, nz), entity));
+            }
+        }
+
+        adjacent_entities
     }
 }

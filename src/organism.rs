@@ -3,15 +3,15 @@
 use rand::Rng;
 // use octree_rs::Octree;
 use crate::cell::{Cell, CellType, Brain, Eye, Producer};
-use crate::world::World;
+use crate::world::{World, Entity};
 use crate::block::{Block, BlockType};
 
 #[derive(Clone)]
 pub struct Organism { // an organism is a collection of cells, including a brain.
     pub cells: Vec<Cell>, 
-    health: f32,
-    energy: f32,
-    age: u32,
+    health: u8,
+    energy: u8,
+    lifespan: u8,
     pub x: i8,
     pub y: i8,
     pub z: i8,
@@ -25,9 +25,9 @@ impl Organism {
         let brain_cell = Cell::new(CellType::Brain(brain), 0, 0, 0, 0);
         Organism {
             cells: vec![brain_cell, Cell::new(CellType::Eater, 0, 1, 1, 0)],
-            health: 100.0,
-            energy: 100.0,
-            age: 0,
+            health: 100,
+            energy: 100,
+            lifespan: 100,
             x: 0,
             y: 0,
             z: 0,
@@ -59,10 +59,11 @@ impl Organism {
     }
     pub fn reproduce(&self) -> Organism { // this currently does not mutate
         let mut new_organism = Organism::new();
+        let size = self.cells.len() as i8;
         new_organism.cells = self.cells.clone();
-        new_organism.x = self.x + rand::thread_rng().gen_range(-10..11);
-        new_organism.y = self.y + rand::thread_rng().gen_range(-10..11);
-        new_organism.z = self.z + rand::thread_rng().gen_range(-10..11);
+        new_organism.x = self.x + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8); // random offset from parent is proportional to the size of the parent
+        new_organism.y = self.y + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8);
+        new_organism.z = self.z + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8);
         new_organism
     }
     pub fn produce_food(&mut self) -> Option<Block> {
@@ -95,24 +96,38 @@ impl Organism {
         self.cells.push(Cell::new(cell_type, 0, dx, dy, dz));
         println!("An organism added a cell");
     }
-    pub fn move_based_on_vision(&mut self, world: &World) { // still in testing
-        // Iterate over all cells in the organism
+    pub fn shift(&mut self, dx: i8, dy: i8, dz: i8) {
+        self.x += dx;
+        self.y += dy;
+        self.z += dz;
+    }
+    pub fn move_based_on_vision(&mut self, world: &World) {
         for cell in &self.cells {
-            // If the cell is an Eye
             if let CellType::Eye(eye) = &cell.cell_type {
-                // Use the eye to look at the world
                 let (food_blocks, killer_cells) = eye.look(cell.rotation, world, self.x as usize, self.y as usize, self.z as usize);
-
+    
+                // Define the direction of movement based on the rotation of the eye
+                let (dx, dy, dz) = match cell.rotation {
+                    0 => (1, 0, 0),  // forward
+                    1 => (-1, 0, 0), // backward
+                    2 => (0, 1, 0),  // left
+                    3 => (0, -1, 0), // right
+                    4 => (0, 0, 1),  // up
+                    5 => (0, 0, -1), // down
+                    _ => (0, 0, 0),  // invalid rotation
+                };
+    
                 // Decide the direction of movement based on what the eye sees
-                // For example, if there are more food blocks than killer cells, move forward
-                // Otherwise, move backward
-                // This is a very simple decision-making process and can be made more complex
                 if food_blocks > killer_cells {
-                    self.x += 1;
+                    self.x += dx;
+                    self.y += dy;
+                    self.z += dz;
                 } else {
-                    self.x -= 1;
+                    self.x -= dx;
+                    self.y -= dy;
+                    self.z -= dz;
                 }
-
+    
                 // Ensure the organism stays within the bounds of the world
                 self.x = self.x.max(0).min(world.width as i8 - 1);
                 self.y = self.y.max(0).min(world.height as i8 - 1);
@@ -120,4 +135,31 @@ impl Organism {
             }
         }
     }
+    pub fn eat(&mut self, world: &mut World) {
+        for cell in &self.cells {
+            if let CellType::Eater = cell.cell_type {
+                let adjacent_entities = world.get_adjacent_entities(self.x as usize, self.y as usize, self.z as usize);
+                for ((x, y, z), entity) in adjacent_entities {
+                    if let Entity::Block(block) = entity {
+                        if let BlockType::Food = block.block_type {
+                            // Consume the food
+                            println!("Food was consumed");
+                            self.energy += 10;
+                            self.health = (self.health + 10).min(100);
+                            world.set_entity(x, y, z, None);
+                            return; // only eat one food block at a time
+                        }
+                    }
+                }
+            }
+        }
+    }
+    pub fn is_dead(&self) -> bool {
+        if (self.health <= 0 || self.energy <= 0 || self.lifespan <= 0) {
+            println!("An organism has died");
+            true;
+        }
+        false
+    }
+
 }

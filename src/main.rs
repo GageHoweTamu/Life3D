@@ -27,14 +27,27 @@ use std::sync::mpsc::channel;
 use std::time::Duration;
 use std::thread;
 
-fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize) {
+fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
+
     for organism in organisms.iter_mut() {
+
+        if organism.is_dead() {
+            println!("An organism died!");
+            // remove the organism from the world and the organisms list
+            for cell in &organism.cells {
+                sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, None);
+            }
+        }
+
         if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of reproduction
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
-                new_organism.mutate();                  // reproduced organisms have a 50% chance of mutation
+                if rand::thread_rng().gen_range(0..2) == 0 {
+                    new_organism.mutate(); // reproduced organisms have a 50% chance of mutation
+                }
                 new_organisms.push(new_organism);
+                println!("A new organism was born!");
             }
         }
         if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
@@ -48,19 +61,28 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             organism.mutate();
             println!("A random mutation occurred!")
         }
-        // if the organism has a mover cell, move it
-        if organism.cells.iter().any(|cell| match cell.cell_type {
-            CellType::Mover => true,
-            _ => false,
-        }) {
-            organism.teleport_random();
+
+        // Check for mover
+        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
+            // Check for Eye
+            if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
+                organism.move_based_on_vision(&World::new(128, 128, 128));
+            } 
+            // If it doesn't have an Eye cell, move randomly
+            else {
+                organism.teleport_random();
+            }
         }
+        organism.eat(sim_world);
+        // Eats one food block if adjacent to one
     }
 }
 // main
 
 fn main() {
     let (tx, rx) = channel();
+
+    let mut sim_world = World::new(128, 128, 128);
 
     let organisms = Arc::new(Mutex::new(vec![Organism::new(), Organism::new()]));
     let blocks = Arc::new(Mutex::new(vec![]));
@@ -78,7 +100,7 @@ fn main() {
             let mut new_organisms = Vec::new();
             let mut new_blocks = Vec::new();
 
-            update_world(&mut *organisms_clone.lock().unwrap(), &mut new_organisms, &mut *blocks_clone.lock().unwrap(), max_organisms, max_blocks);
+            update_world(&mut *organisms_clone.lock().unwrap(), &mut new_organisms, &mut *blocks_clone.lock().unwrap(), max_organisms, max_blocks, &mut sim_world);
 
             tx.send((new_organisms, new_blocks)).unwrap();
         }
@@ -97,7 +119,6 @@ fn main() {
     println!("Camera up key: {:?}", x);
     let mut parent_objects = Vec::new();
     let mut last_instant = Instant::now(); // for fps calculation
-    let mut world = World::new(128, 128, 128);
     let fps_renderer = TextRenderer::new();
 
     let mut frame_counter = 0;
