@@ -58,7 +58,11 @@ impl Organism {
         self.z += dz;
 
     }
-    pub fn reproduce(&self) -> Organism { // this currently does not mutate
+    pub fn reproduce(&mut self) -> Organism {
+        if self.energy >= 10 {
+            self.energy -= 10;
+        }
+
         let mut new_organism = Organism::new();
         let size = self.cells.len() as i8;
         new_organism.cells = self.cells.clone();
@@ -163,8 +167,7 @@ impl Organism {
         if self.health <= 0 || self.energy <= 0 || self.lifespan <= 0 {
             println!("An organism has died");
             true;
-        }
-        false
+        } false
     }
     // when called, turn the cells into food blocks
     // and destroy the organism

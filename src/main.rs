@@ -30,11 +30,12 @@ use std::thread;
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
     sim_world.clear();
-
+    println!("Number of organisms: {}", organisms.len()); // 20
     organisms.retain(|organism| !organism.is_dead()); // remove dead organisms
+    println!("Number of organisms: {}", organisms.len()); // 20
+
     for organism in organisms.iter_mut() {
-
-
+        println!("Organism energy: {}", organism.energy);
 
         for cell in &organism.cells { // add the cells to the world vector
             sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
@@ -50,7 +51,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 // println!("A new organism was born!");
             }
         }
-        if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
+        if rand::thread_rng().gen_range(0..10) == 0 { // 10% chance of food production
             if max_blocks > blocks.len() {
                 if let Some(block) = organism.produce_food() {
                     blocks.push(block);
@@ -76,19 +77,18 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         organism.eat(sim_world); // Eats one food block if adjacent to one
 
         if organism.lifespan > 0 {
-            organism.lifespan -= 5;
+            organism.lifespan -= 1;
         }
         if organism.energy > 0 {
             organism.energy -= 5;
         }
         if organism.is_dead() {
-            organism.kill();
+            for val in organism.kill() {
+                blocks.push(val);       // Add the dead organism's cells as food blocks
+            }
         }
 
     }
-
-    // print number of organisms, number of blocks
-    println!("Number of organisms: {}", organisms.len());
     println!("Number of blocks: {}", blocks.len());
 }
 // main
