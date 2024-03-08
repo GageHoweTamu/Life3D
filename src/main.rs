@@ -30,9 +30,6 @@ use std::thread;
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
     sim_world.clear();
-    println!("Number of organisms: {}", organisms.len()); // 20
-    organisms.retain(|organism| !organism.is_dead()); // remove dead organisms
-    println!("Number of organisms: {}", organisms.len()); // 20
 
     for organism in organisms.iter_mut() {
         println!("Organism energy: {}", organism.energy);
@@ -83,12 +80,22 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             organism.energy -= 5;
         }
         if organism.is_dead() {
+            println!("Organism died");
             for val in organism.kill() {
                 blocks.push(val);       // Add the dead organism's cells as food blocks
             }
         }
 
     }
+    println!("Number of organisms: {}", organisms.len()); // 20
+    organisms.retain(|organism| {
+        let result = !organism.is_dead();
+        if !result {
+            println!("Removing dead organism");
+        }
+        result
+    });
+    println!("Number of organisms: {}", organisms.len()); // 20
     println!("Number of blocks: {}", blocks.len());
 }
 // main

@@ -166,8 +166,10 @@ impl Organism {
     pub fn is_dead(&self) -> bool {
         if self.health <= 0 || self.energy <= 0 || self.lifespan <= 0 {
             println!("An organism has died");
-            true;
-        } false
+            true
+        } else {
+            false
+        }
     }
     // when called, turn the cells into food blocks
     // and destroy the organism
