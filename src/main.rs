@@ -31,14 +31,11 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     let organisms_len = organisms.len();
     sim_world.clear();
 
+    organisms.retain(|organism| !organism.is_dead()); // remove dead organisms
     for organism in organisms.iter_mut() {
 
-        if organism.is_dead() {
-            println!("An organism died!");
-            // remove the organism from the world and the organisms list
-            for cell in &organism.cells {
-                sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, None);
-            }
+        for cell in &organism.cells { // add the cells to the world vector
+            sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
         }
 
         if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
@@ -74,8 +71,13 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 organism.teleport_random();
             }
         }
-        organism.eat(sim_world);
-        // Eats one food block if adjacent to one
+        organism.eat(sim_world); // Eats one food block if adjacent to one
+
+        organism.lifespan -= 1;
+        organism.energy -= 1;
+        if organism.is_dead() {
+            organism.kill();
+        }
     }
 }
 // main
@@ -91,8 +93,8 @@ fn main() {
     let organisms_clone = Arc::clone(&organisms);
     let blocks_clone = Arc::clone(&blocks);
 
-    let max_organisms = 100;
-    let max_blocks = 100;
+    let max_organisms = 20;
+    let max_blocks = 50;
 
     thread::spawn(move || {
         loop {
@@ -146,7 +148,6 @@ fn main() {
                     CellType::Brain(_) => cube.set_color(0.9, 0.4, 0.4),
                     CellType::Eye(_) => {
                         cube.set_color(1.0, 1.0, 1.0);
-                        // render a line in the direction of the eye
                         // a is the point of the eye: organism.x + cell.local_x, organism.y + cell.local_y, organism.z + cell.local_z
                         let a = Point3::new((organism.x + cell.local_x) as f32, (organism.y + cell.local_y) as f32, (organism.z + cell.local_z) as f32);
                         let offset = match cell.rotation {
@@ -171,7 +172,7 @@ fn main() {
             for block in &*blocks.lock().unwrap() {
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
                 match block.block_type {
-                    BlockType::Food => cube.set_color(0.5, 1.0, 0.0),
+                    BlockType::Food => cube.set_color(0.0, 0.5, 0.5),
                     BlockType::Wall => cube.set_color(0.2, 0.2, 0.2),
                 };
                 cube.append_translation(&Translation3::new(block.x as f32, block.y as f32, block.z as f32));

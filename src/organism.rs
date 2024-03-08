@@ -9,9 +9,9 @@ use crate::block::{Block, BlockType};
 #[derive(Clone)]
 pub struct Organism { // an organism is a collection of cells, including a brain.
     pub cells: Vec<Cell>, 
-    health: u8,
-    energy: u8,
-    lifespan: u8,
+    pub health: u8,
+    pub energy: u8,
+    pub lifespan: u8,
     pub x: i8,
     pub y: i8,
     pub z: i8,
@@ -35,14 +35,15 @@ impl Organism {
     }
     pub fn mutate(&mut self) { // mutates a random cell
         let mut rng = rand::thread_rng();
-        // determine whether to add a cell or mutate an existing one
+        // determine whether to add, remove, or mutate a cell
     
-        match rng.gen_range(0..2) {
+        match rng.gen_range(0..3) {
             0 => self.add_random_cell(),
             1 => {
                 let cell_index = rng.gen_range(0..self.cells.len());
                 self.cells[cell_index].mutate();
             },
+            2 => self.remove_random_cell(),
             _ => (),
         }
     }
@@ -73,7 +74,7 @@ impl Organism {
                 let dx = rng.gen_range(-1..2);
                 let dy = rng.gen_range(-1..2);
                 let dz = rng.gen_range(-1..2);
-                // println!("Producing food at ({}, {}, {})", self.x + dx, self.y + dy, self.z + dz);
+                println!("Producing food at ({}, {}, {})", self.x + dx, self.y + dy, self.z + dz);
                 return Some(Block::new(BlockType::Food, self.x + dx, self.y + dy, self.z + dz));
             }
         }
@@ -97,6 +98,13 @@ impl Organism {
         self.cells.push(Cell::new(cell_type, random_rotation, dx, dy, dz));
         // println!("An organism added a cell");
     }
+    pub fn remove_random_cell(&mut self) {
+        let mut rng = rand::thread_rng();
+        if self.cells.len() > 1 {
+            let cell_index = rng.gen_range(0..self.cells.len());
+            self.cells.remove(cell_index);
+        }
+    }
     pub fn shift(&mut self, dx: i8, dy: i8, dz: i8) {
         self.x += dx;
         self.y += dy;
@@ -106,8 +114,6 @@ impl Organism {
         for cell in &self.cells {
             if let CellType::Eye(eye) = &cell.cell_type {
                 let (food_blocks, killer_cells) = eye.look(cell.rotation, world, self.x as usize, self.y as usize, self.z as usize);
-    
-                // Define the direction of movement based on the rotation of the eye
                 let (dx, dy, dz) = match cell.rotation {
                     0 => (1, 0, 0),  // x
                     1 => (-1, 0, 0), // -x
@@ -116,8 +122,6 @@ impl Organism {
                     4 => (0, 0, 1),  // z
                     _ => (0, 0, -1), // -z
                 };
-    
-                // Decide the direction of movement based on what the eye sees
                 if food_blocks > killer_cells {
                     self.x += dx;
                     self.y += dy;
@@ -129,14 +133,10 @@ impl Organism {
                     self.z -= dz;
                     println!("Running away from danger! There are {} food blocks and {} killer cells", food_blocks, killer_cells);
                 } else {
-                    self.teleport_random();
+                    // self.teleport_random();
                     println!("Vibing. There are {} food blocks and {} killer cells", food_blocks, killer_cells);
                 }
-    
                 // Ensure the organism stays within the bounds of the world
-                self.x = self.x.max(0).min(world.width as i8 - 1);
-                self.y = self.y.max(0).min(world.height as i8 - 1);
-                self.z = self.z.max(0).min(world.depth as i8 - 1);
             }
         }
     }
@@ -160,10 +160,20 @@ impl Organism {
         }
     }
     pub fn is_dead(&self) -> bool {
-        if (self.health <= 0 || self.energy <= 0 || self.lifespan <= 0) {
+        if self.health <= 0 || self.energy <= 0 || self.lifespan <= 0 {
             println!("An organism has died");
             true;
         }
         false
+    }
+    // when called, turn the cells into food blocks
+    pub fn kill(&self) -> Vec<Block> {
+        let mut blocks = Vec::new();
+        for cell in &self.cells {
+            if let CellType::Killer = cell.cell_type {
+                blocks.push(Block::new(BlockType::Food, self.x + cell.local_x, self.y + cell.local_y, self.z + cell.local_z));
+            }
+        }
+        blocks
     }
 }

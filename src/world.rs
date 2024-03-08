@@ -30,9 +30,9 @@ impl World {
         if x < self.width && y < self.height && z < self.depth {
             self.grid[x][y][z] = entity;
         } else {
-            println!("OOB in set_entity ");
+            // println!("OOB in set_entity ");
         }
-        println!("Entity set at {}, {}, {}", x, y, z);
+        // println!("Entity set at {}, {}, {}", x, y, z);
     }
 
     pub fn get_entity(&self, x: usize, y: usize, z: usize) -> Option<&Entity> {

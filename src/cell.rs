@@ -34,11 +34,7 @@ pub struct Brain {
 #[derive(Debug)]
 #[derive(Clone)]
 pub struct Producer {}
-impl Producer {
-    pub fn produce(&self) -> Block {
-        Block::new(BlockType::Food, 0, 0, 0)
-    }
-}
+impl Producer {}
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -48,7 +44,6 @@ impl Eye {
         let mut food_blocks = 0;
         let mut killer_cells = 0;
 
-        // Define the direction of look based on rotation
         let (dx, dy, dz) = match rotation {
             0 => (1, 0, 0),  // x
             1 => (-1, 0, 0), // -x
