@@ -167,12 +167,11 @@ impl Organism {
         false
     }
     // when called, turn the cells into food blocks
+    // and destroy the organism
     pub fn kill(&self) -> Vec<Block> {
         let mut blocks = Vec::new();
         for cell in &self.cells {
-            if let CellType::Killer = cell.cell_type {
-                blocks.push(Block::new(BlockType::Food, self.x + cell.local_x, self.y + cell.local_y, self.z + cell.local_z));
-            }
+            blocks.push(Block::new(BlockType::Food, self.x + cell.local_x, self.y + cell.local_y, self.z + cell.local_z));
         }
         blocks
     }

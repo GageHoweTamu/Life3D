@@ -34,6 +34,8 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     organisms.retain(|organism| !organism.is_dead()); // remove dead organisms
     for organism in organisms.iter_mut() {
 
+
+
         for cell in &organism.cells { // add the cells to the world vector
             sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
         }
@@ -73,12 +75,21 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         }
         organism.eat(sim_world); // Eats one food block if adjacent to one
 
-        organism.lifespan -= 1;
-        organism.energy -= 1;
+        if organism.lifespan > 0 {
+            organism.lifespan -= 5;
+        }
+        if organism.energy > 0 {
+            organism.energy -= 5;
+        }
         if organism.is_dead() {
             organism.kill();
         }
+
     }
+
+    // print number of organisms, number of blocks
+    println!("Number of organisms: {}", organisms.len());
+    println!("Number of blocks: {}", blocks.len());
 }
 // main
 
@@ -87,7 +98,7 @@ fn main() {
 
     let mut sim_world = World::new(128, 128, 128);
 
-    let organisms = Arc::new(Mutex::new(vec![Organism::new()])); // Create a new organism
+    let organisms = Arc::new(Mutex::new(vec![Organism::new()])); // Create a vec with one new organism
     let blocks = Arc::new(Mutex::new(vec![]));
 
     let organisms_clone = Arc::clone(&organisms);
