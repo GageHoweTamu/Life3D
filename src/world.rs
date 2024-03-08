@@ -32,6 +32,7 @@ impl World {
         } else {
             println!("OOB in set_entity ");
         }
+        println!("Entity set at {}, {}, {}", x, y, z);
     }
 
     pub fn get_entity(&self, x: usize, y: usize, z: usize) -> Option<&Entity> {
@@ -68,13 +69,8 @@ impl World {
 
         adjacent_entities
     }
-    fn clear(&mut self) { // this should be called at the start of each tick
-        for x in 0..self.width {
-            for y in 0..self.height {
-                for z in 0..self.depth {
-                    self.set_entity(x, y, z, None);
-                }
-            }
-        }
+    pub fn clear(&mut self) {
+        self.grid = vec![vec![vec![None; self.depth]; self.height]; self.width];
+        // println!("World was cleared");
     }
 }

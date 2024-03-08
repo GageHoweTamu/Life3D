@@ -29,6 +29,7 @@ use std::thread;
 
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
+    sim_world.clear();
 
     for organism in organisms.iter_mut() {
 
@@ -40,14 +41,14 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             }
         }
 
-        if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of reproduction
+        if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
                 if rand::thread_rng().gen_range(0..2) == 0 {
                     new_organism.mutate(); // reproduced organisms have a 50% chance of mutation
                 }
                 new_organisms.push(new_organism);
-                println!("A new organism was born!");
+                // println!("A new organism was born!");
             }
         }
         if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
@@ -57,9 +58,9 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 }
             }
         }
-        if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of random mutation
+        if rand::thread_rng().gen_range(0..1000) == 0 { // 0.1% chance of random mutation
             organism.mutate();
-            println!("A random mutation occurred!")
+            // println!("A random mutation occurred!")
         }
 
         // Check for mover
@@ -84,7 +85,7 @@ fn main() {
 
     let mut sim_world = World::new(128, 128, 128);
 
-    let organisms = Arc::new(Mutex::new(vec![Organism::new(), Organism::new()]));
+    let organisms = Arc::new(Mutex::new(vec![Organism::new()])); // Create a new organism
     let blocks = Arc::new(Mutex::new(vec![]));
 
     let organisms_clone = Arc::clone(&organisms);
@@ -142,20 +143,19 @@ fn main() {
             for cell in &organism.cells { // render cells
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
                 match cell.cell_type {
-                    CellType::Brain(_) => cube.set_color(0.8, 0.5, 0.5),
+                    CellType::Brain(_) => cube.set_color(0.9, 0.4, 0.4),
                     CellType::Eye(_) => {
                         cube.set_color(1.0, 1.0, 1.0);
                         // render a line in the direction of the eye
                         // a is the point of the eye: organism.x + cell.local_x, organism.y + cell.local_y, organism.z + cell.local_z
                         let a = Point3::new((organism.x + cell.local_x) as f32, (organism.y + cell.local_y) as f32, (organism.z + cell.local_z) as f32);
                         let offset = match cell.rotation {
-                            0 => Vector3::new(1.0, 0.0, 0.0),
-                            1 => Vector3::new(-1.0, 0.0, 0.0),
-                            2 => Vector3::new(0.0, 1.0, 0.0),
-                            3 => Vector3::new(0.0, -1.0, 0.0),
-                            4 => Vector3::new(0.0, 0.0, 1.0),
-                            5 => Vector3::new(0.0, 0.0, -1.0),
-                            _ => Vector3::new(0.0, 0.0, 0.0),
+                            0 => Vector3::new(1.0, 0.0, 0.0), // x
+                            1 => Vector3::new(-1.0, 0.0, 0.0), // -x
+                            2 => Vector3::new(0.0, 1.0, 0.0), // y
+                            3 => Vector3::new(0.0, -1.0, 0.0), // -y
+                            4 => Vector3::new(0.0, 0.0, 1.0), // z
+                            _ => Vector3::new(0.0, 0.0, -1.0), // -z
                         };
                         let b = a + offset;
                         window.draw_line(&a, &b, &Point3::new(1.0, 1.0, 1.0));

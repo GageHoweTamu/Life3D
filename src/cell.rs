@@ -50,13 +50,12 @@ impl Eye {
 
         // Define the direction of look based on rotation
         let (dx, dy, dz) = match rotation {
-            0 => (1, 0, 0),  // forward
-            1 => (-1, 0, 0), // backward
-            2 => (0, 1, 0),  // left
-            3 => (0, -1, 0), // right
-            4 => (0, 0, 1),  // up
-            5 => (0, 0, -1), // down
-            _ => (0, 0, 0),  // invalid rotation
+            0 => (1, 0, 0),  // x
+            1 => (-1, 0, 0), // -x
+            2 => (0, 1, 0),  // y
+            3 => (0, -1, 0), // -y
+            4 => (0, 0, 1),  // z
+            _ => (0, 0, -1), // -z
         };
 
         // Start from the current position and move in the direction of look
@@ -147,7 +146,7 @@ impl Cell {
                 self.cell_type = mutated_type;
             }
         }
-        println!("Mutated a cell to {:?}", self.cell_type);
+        // println!("Mutated a cell to {:?}", self.cell_type);
     }
     pub fn shift(&mut self, x: i8, y: i8, z: i8) {
         self.local_x += x;

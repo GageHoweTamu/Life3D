@@ -73,7 +73,7 @@ impl Organism {
                 let dx = rng.gen_range(-1..2);
                 let dy = rng.gen_range(-1..2);
                 let dz = rng.gen_range(-1..2);
-                println!("Producing food at ({}, {}, {})", self.x + dx, self.y + dy, self.z + dz);
+                // println!("Producing food at ({}, {}, {})", self.x + dx, self.y + dy, self.z + dz);
                 return Some(Block::new(BlockType::Food, self.x + dx, self.y + dy, self.z + dz));
             }
         }
@@ -93,8 +93,9 @@ impl Organism {
         let dx = rng.gen_range(-1..2);
         let dy = rng.gen_range(-1..2);
         let dz = rng.gen_range(-1..2);
-        self.cells.push(Cell::new(cell_type, 0, dx, dy, dz));
-        println!("An organism added a cell");
+        let random_rotation = rng.gen_range(0..6);
+        self.cells.push(Cell::new(cell_type, random_rotation, dx, dy, dz));
+        // println!("An organism added a cell");
     }
     pub fn shift(&mut self, dx: i8, dy: i8, dz: i8) {
         self.x += dx;
@@ -108,13 +109,12 @@ impl Organism {
     
                 // Define the direction of movement based on the rotation of the eye
                 let (dx, dy, dz) = match cell.rotation {
-                    0 => (1, 0, 0),  // forward
-                    1 => (-1, 0, 0), // backward
-                    2 => (0, 1, 0),  // left
-                    3 => (0, -1, 0), // right
-                    4 => (0, 0, 1),  // up
-                    5 => (0, 0, -1), // down
-                    _ => (0, 0, 0),  // invalid rotation
+                    0 => (1, 0, 0),  // x
+                    1 => (-1, 0, 0), // -x
+                    2 => (0, 1, 0),  // y
+                    3 => (0, -1, 0), // -y
+                    4 => (0, 0, 1),  // z
+                    _ => (0, 0, -1), // -z
                 };
     
                 // Decide the direction of movement based on what the eye sees
@@ -122,10 +122,15 @@ impl Organism {
                     self.x += dx;
                     self.y += dy;
                     self.z += dz;
-                } else {
+                    println!("Moving towards food! There are {} food blocks and {} killer cells", food_blocks, killer_cells);
+                } else if food_blocks < killer_cells {
                     self.x -= dx;
                     self.y -= dy;
                     self.z -= dz;
+                    println!("Running away from danger! There are {} food blocks and {} killer cells", food_blocks, killer_cells);
+                } else {
+                    self.teleport_random();
+                    println!("Vibing. There are {} food blocks and {} killer cells", food_blocks, killer_cells);
                 }
     
                 // Ensure the organism stays within the bounds of the world
@@ -161,5 +166,4 @@ impl Organism {
         }
         false
     }
-
 }
