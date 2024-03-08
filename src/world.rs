@@ -68,4 +68,13 @@ impl World {
 
         adjacent_entities
     }
+    fn clear(&mut self) { // this should be called at the start of each tick
+        for x in 0..self.width {
+            for y in 0..self.height {
+                for z in 0..self.depth {
+                    self.set_entity(x, y, z, None);
+                }
+            }
+        }
+    }
 }

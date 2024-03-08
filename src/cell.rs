@@ -15,8 +15,8 @@ TODO:
     - [ ] an organism dies when its health, energy, or lifespan reaches 0
 - [ ] Implement organism movement
     - [ ] When an organism moves or changes cells etc, update the world grid.
-    // make a function that adds the organism's cells to the world grid
-    // every tick, the world grid is cleared and blocks and cells should be added to it
+    // set_entity() adds the organism's cells to the world grid
+    // every tick, the world grid is clear() 'ed and blocks and cells should be added to it
 
 */
 
