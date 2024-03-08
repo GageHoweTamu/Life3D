@@ -3,8 +3,10 @@
 use rand::Rng;
 // use octree_rs::Octree;
 use crate::cell::{Cell, CellType, Brain, Eye, Producer};
+use crate::world::World;
 use crate::block::{Block, BlockType};
 
+#[derive(Clone)]
 pub struct Organism { // an organism is a collection of cells, including a brain.
     pub cells: Vec<Cell>, 
     health: f32,
@@ -20,9 +22,9 @@ impl Organism {
             aggression: 0.5,
             hunger: 0.5,
         };
-        let brain_cell = Cell::new(CellType::Brain(brain), 0, 0, 0);
+        let brain_cell = Cell::new(CellType::Brain(brain), 0, 0, 0, 0);
         Organism {
-            cells: vec![brain_cell, Cell::new(CellType::Eater, 1, 1, 0)],
+            cells: vec![brain_cell, Cell::new(CellType::Eater, 0, 1, 1, 0)],
             health: 100.0,
             energy: 100.0,
             age: 0,
@@ -78,17 +80,44 @@ impl Organism {
     }
     pub fn add_random_cell(&mut self) {
         let mut rng = rand::thread_rng();
-        let cell_type = match rng.gen_range(0..5) {
-            0 => CellType::Eye(Eye { rotation: rng.gen_range(0..6) }),
+        let cell_type = match rng.gen_range(0..7) { // add random rotation
+            0 => CellType::Eye(Eye {}),
             1 => CellType::Armor,
-            2 => CellType::Damager,
+            2 => CellType::Killer,
             3 => CellType::Eater,
             4 => CellType::Producer(Producer {}),
+            5 => CellType::Mover,
             _ => CellType::Eater,
         };
         let dx = rng.gen_range(-1..2);
         let dy = rng.gen_range(-1..2);
         let dz = rng.gen_range(-1..2);
-        self.cells.push(Cell::new(cell_type, dx, dy, dz));
+        self.cells.push(Cell::new(cell_type, 0, dx, dy, dz));
+        println!("An organism added a cell");
+    }
+    pub fn move_based_on_vision(&mut self, world: &World) { // still in testing
+        // Iterate over all cells in the organism
+        for cell in &self.cells {
+            // If the cell is an Eye
+            if let CellType::Eye(eye) = &cell.cell_type {
+                // Use the eye to look at the world
+                let (food_blocks, killer_cells) = eye.look(cell.rotation, world, self.x as usize, self.y as usize, self.z as usize);
+
+                // Decide the direction of movement based on what the eye sees
+                // For example, if there are more food blocks than killer cells, move forward
+                // Otherwise, move backward
+                // This is a very simple decision-making process and can be made more complex
+                if food_blocks > killer_cells {
+                    self.x += 1;
+                } else {
+                    self.x -= 1;
+                }
+
+                // Ensure the organism stays within the bounds of the world
+                self.x = self.x.max(0).min(world.width as i8 - 1);
+                self.y = self.y.max(0).min(world.height as i8 - 1);
+                self.z = self.z.max(0).min(world.depth as i8 - 1);
+            }
+        }
     }
 }

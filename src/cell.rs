@@ -21,26 +21,14 @@ impl Producer {
 
 #[derive(Debug)]
 #[derive(Clone)]
-pub struct Eye {
-    pub rotation: i8,   // 0: forward, 1: backward, 2: left, 3: right, 4: up, 5: down
-                        // This determines where the eye looks in the look() function
-}
+pub struct Eye {}
 impl Eye {
-    /*
-    pub fn look(&self) -> (i8, i8) { // returns number of food blocks and killer cells in front of the eye
-        // look logic
-        // scans the grid in the direction of rotation
-        // looks for food blocks and killer cells
-        println!("Detected: ...");
-        //(0, 0)
-    }
-    */
-    pub fn look(&self, world: &World, x: usize, y: usize, z: usize) -> (i32, i32) {
+    pub fn look(&self, rotation: i8, world: &World, x: usize, y: usize, z: usize) -> (i32, i32) {
         let mut food_blocks = 0;
         let mut killer_cells = 0;
 
         // Define the direction of look based on rotation
-        let (dx, dy, dz) = match self.rotation {
+        let (dx, dy, dz) = match rotation {
             0 => (1, 0, 0),  // forward
             1 => (-1, 0, 0), // backward
             2 => (0, 1, 0),  // left
@@ -63,15 +51,16 @@ impl Eye {
             if let Some(entity) = world.get_entity(current_x as usize, current_y as usize, current_z as usize) {
                 match entity {
                     Entity::Block(block) => {
-                        if block.block_type == BlockType::Food {
-                            food_blocks += 1; 
+                        if let BlockType::Food = block.block_type {
+                            food_blocks += 1;
                         }
                     }
                     Entity::Cell(cell) => {
-                        if let CellType::Brain(brain) = &cell.cell_type {
-                            if brain.aggression > 0.5 {
+                        match &cell.cell_type {
+                            CellType::Killer => {
                                 killer_cells += 1;
                             }
+                            _ => { }
                         }
                     }
                 }
@@ -93,23 +82,26 @@ pub enum CellType {
     Brain(Brain), // The brain cell is the first cell in the organism, and cannot be removed
     Eye(Eye),
     Armor,
-    Damager,
+    Killer,
     Eater,
+    Mover,
     Producer(Producer),
 }
 
 #[derive(Clone)]
 pub struct Cell {
     pub cell_type: CellType,
+    pub rotation: i8,
     pub local_x: i8,
     pub local_y: i8,
     pub local_z: i8,
 }
 
 impl Cell {
-    pub fn new(cell_type: CellType, local_x: i8, local_y: i8, local_z: i8) -> Cell {
+    pub fn new(cell_type: CellType, rotation: i8, local_x: i8, local_y: i8, local_z: i8) -> Cell {
         Cell {
             cell_type,
+            rotation,
             local_x,
             local_y,
             local_z,
@@ -124,9 +116,9 @@ impl Cell {
             }
             _ => {
                 let mutated_type = match rng.gen_range(0..6) {
-                    1 => CellType::Eye(Eye { rotation: rng.gen_range(0..6) }),
+                    1 => CellType::Eye(Eye {}),
                     2 => CellType::Armor,
-                    3 => CellType::Damager,
+                    3 => CellType::Killer,
                     4 => CellType::Eater,
                     5 => CellType::Producer(Producer {}),
                     _ => self.cell_type.clone(),
@@ -134,7 +126,7 @@ impl Cell {
                 self.cell_type = mutated_type;
             }
         }
-        println!("Mutated cell to {:?}", self.cell_type);
+        println!("Mutated a cell to {:?}", self.cell_type);
     }
     pub fn shift(&mut self, x: i8, y: i8, z: i8) {
         self.local_x += x;
@@ -144,6 +136,7 @@ impl Cell {
     pub fn clone(&self) -> Cell { // this may not be needed
         let mut temp = Cell {
             cell_type: self.cell_type.clone(),
+            rotation: self.rotation,
             local_x: self.local_x,
             local_y: self.local_y,
             local_z: self.local_z,
