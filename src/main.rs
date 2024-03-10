@@ -29,13 +29,13 @@ use std::thread;
 
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
-    sim_world.clear();
+    // sim_world.clear(); // this causes a slowdown
 
     for organism in organisms.iter_mut() {
-        println!("Organism energy: {}", organism.energy);
+        // println!("Organism energy: {}", organism.energy);
 
         for cell in &organism.cells { // add the cells to the world vector
-            sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
+            // sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
         }
 
         if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
@@ -45,7 +45,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                     new_organism.mutate(); // reproduced organisms have a 50% chance of mutation
                 }
                 new_organisms.push(new_organism);
-                // println!("A new organism was born!");
+                println!("A new organism was born!");
             }
         }
         if rand::thread_rng().gen_range(0..10) == 0 { // 10% chance of food production
@@ -64,39 +64,40 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
             // Check for Eye
             if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
-                organism.move_based_on_vision(&World::new(128, 128, 128));
-            } 
+                // organism.move_based_on_vision(&World::new(128, 128, 128));
+            }
             // If it doesn't have an Eye cell, move randomly
             else {
                 organism.teleport_random();
             }
         }
-        organism.eat(sim_world); // Eats one food block if adjacent to one
+
+        // Eats one food block if adjacent to one
+        organism.eat(&mut *blocks);
 
         if organism.lifespan > 0 {
             organism.lifespan -= 1;
         }
         if organism.energy > 0 {
-            organism.energy -= 5;
+            organism.energy -= 2;
         }
         if organism.is_dead() {
             println!("Organism died");
             for val in organism.kill() {
-                blocks.push(val);       // Add the dead organism's cells as food blocks
+                if blocks.len() < max_blocks {
+                    blocks.push(val);       // Add the dead organism's cells as food blocks
+                }
             }
         }
-
     }
-    println!("Number of organisms: {}", organisms.len()); // 20
-    organisms.retain(|organism| {
+    organisms.retain(|organism| { // Remove dead organisms
         let result = !organism.is_dead();
-        if !result {
-            println!("Removing dead organism");
-        }
-        result
+        if !result { // println!("Removing dead organism");
+        } result
     });
-    println!("Number of organisms: {}", organisms.len()); // 20
-    println!("Number of blocks: {}", blocks.len());
+
+    // println!("Number of organisms: {}", organisms.len());
+    // println!("Number of blocks: {}", blocks.len());
 }
 // main
 
@@ -111,7 +112,7 @@ fn main() {
     let organisms_clone = Arc::clone(&organisms);
     let blocks_clone = Arc::clone(&blocks);
 
-    let max_organisms = 20;
+    let max_organisms = 50;
     let max_blocks = 50;
 
     thread::spawn(move || {

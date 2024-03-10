@@ -1,5 +1,4 @@
 // defines the world and its components
-use std::collections::HashMap;
 use crate::organism::Organism;
 use crate::block::Block;
 use crate::cell::Cell;
