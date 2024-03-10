@@ -162,6 +162,7 @@ impl Organism {
         nearby_organisms
     }
     
+    // move this to eater
     pub fn get_nearby_blocks<'a>(&self, blocks: &'a Vec<Block>) -> Vec<&'a Block> {
         let mut nearby_blocks = Vec::new();
         for block in blocks {

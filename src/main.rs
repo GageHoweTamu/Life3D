@@ -34,10 +34,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     for organism in organisms.iter_mut() {
         // println!("Organism energy: {}", organism.energy);
 
-        for cell in &organism.cells { // add the cells to the world vector
-            // sim_world.set_entity((organism.x + cell.local_x) as usize, (organism.y + cell.local_y) as usize, (organism.z + cell.local_z) as usize, Some(Entity::Cell(cell.clone())));
-        }
-
         if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
@@ -48,7 +44,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 println!("A new organism was born!");
             }
         }
-        if rand::thread_rng().gen_range(0..10) == 0 { // 10% chance of food production
+        if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
             if max_blocks > blocks.len() {
                 if let Some(block) = organism.produce_food() {
                     blocks.push(block);
@@ -64,7 +60,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
             // Check for Eye
             if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
-                // organism.move_based_on_vision(&World::new(128, 128, 128));
+                organism.move_better(organisms, blocks);
             }
             // If it doesn't have an Eye cell, move randomly
             else {
@@ -156,7 +152,7 @@ fn main() {
             blocks.lock().unwrap().append(&mut new_blocks.clone());
         }
 
-        let mut new_organisms: Vec<kiss3d::event::Key> = Vec::new();
+
         let num_organisms = organisms.lock().unwrap().len();
 
         for organism in &mut *organisms.lock().unwrap() {
