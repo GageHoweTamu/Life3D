@@ -1,16 +1,13 @@
 // main
 
 use std::time::{Instant};
-
 use kiss3d::scene::SceneNode;
 use rand::Rng;
-
-use kiss3d::nalgebra::{Point, Point3, Translation3, UnitQuaternion, Vector3};
+use kiss3d::nalgebra::{Point, Point2, Point3, Translation3, UnitQuaternion, Vector3};
 use kiss3d::window::Window;
 use kiss3d::light::Light;
 use kiss3d::camera::FirstPerson;
 use kiss3d::text::TextRenderer;
-
 mod organism;
 mod cell;
 mod world;
@@ -20,20 +17,21 @@ use cell::*;
 use world::*;
 use world::*;
 use block::*;
-
 use std::sync::{Arc, Mutex};
-
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use std::thread;
 
+/*
+TODO:
+- [ ] Fix issue where organisms eat food without being adjacent to it
+- [ ] Add text rendering for fps, total organisms, etc.
+*/
+
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
-    let organisms_len = organisms.len();
-    // sim_world.clear(); // this causes a slowdown
-    
+    let organisms_len = organisms.len();    
 
     for organism in organisms.iter_mut() {
-        // println!("Organism energy: {}", organism.energy);
 
         if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
             if organisms_len < max_organisms {
@@ -42,7 +40,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                     new_organism.mutate(); // reproduced organisms have a 50% chance of mutation
                 }
                 new_organisms.push(new_organism);
-                println!("A new organism was born!");
             }
         }
         if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
@@ -75,11 +72,21 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         }
     }
 
-    let mut to_move_better = Vec::new();
     let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
 
-    for (i, organism) in organisms.iter_mut().enumerate() {
 
+            // damage nearby organisms if there are killer cells
+    let mut to_damage = Vec::new();
+    for (i, organism) in organisms.iter_mut().enumerate() {
+        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Killer)) {
+            to_damage.push(i);
+        }
+    }
+    for i in to_damage {
+        organisms_clone[i].damage_nearby_organisms(organisms);
+    }
+    let mut to_move_better = Vec::new();
+    for (i, organism) in organisms.iter_mut().enumerate() {
         if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
             if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
                 to_move_better.push(i);
@@ -87,7 +94,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             else { organism.teleport_random(); }
         }
     }
-
     for i in to_move_better {
         organisms[i].move_better(organisms_clone, blocks);
     }
@@ -113,8 +119,8 @@ fn main() {
     let organisms_clone = Arc::clone(&organisms);
     let blocks_clone = Arc::clone(&blocks);
 
-    let max_organisms = 50;
-    let max_blocks = 50;
+    let max_organisms = 200;
+    let max_blocks = 200;
 
     thread::spawn(move || {
         loop {
@@ -142,7 +148,6 @@ fn main() {
     println!("Camera up key: {:?}", x);
     let mut parent_objects = Vec::new();
     let mut last_instant = Instant::now(); // for fps calculation
-    let fps_renderer = TextRenderer::new();
 
     let mut frame_counter = 0;
     while window.render() {                                                     // For each frame
@@ -199,6 +204,17 @@ fn main() {
             }
             parent_objects.push(parent);
         }
+
+        let mut fps_renderer = TextRenderer::new();
+
+        // Draw text
+        let font2 = kiss3d::text::Font::default();
+        let color2 = Point3::new(1.0, 1.0, 1.0);
+        let point2 = Point2::new(0.0, 0.0);
+        fps_renderer.draw_text("hi!", &point2, 10.0, &font2, &color2);
+        
+        // Render the text
+        fps_renderer.render(window.width() as f32, window.height() as f32);
 
         let now = Instant::now();
         let framerate = 1.0 / (now.duration_since(last_instant)).as_secs_f32();

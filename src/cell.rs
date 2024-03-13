@@ -1,12 +1,3 @@
-/*
-
-TODO:
-
-- [ ] Finish eye behavior (looks forward and counts food and killer cells in the line of sight)
-- [ ] Finish eater behavior (destroys food blocks and adds energy and health to the organism)
-- [ ] Implement killer behavior (damages organisms when in contact with their cells)
-
-*/
 
 use rand::Rng;
 use crate::block::{Block, BlockType};

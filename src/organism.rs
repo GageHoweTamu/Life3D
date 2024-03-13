@@ -60,9 +60,8 @@ impl Organism {
 
     }
     pub fn reproduce(&mut self) -> Organism {
-        if self.energy >= 10 {
-            self.energy -= 10;
-        }
+        if self.energy >= 10 { self.energy -= 10; }
+        else { self.energy = 0; }
 
         let mut new_organism = Organism::new();
         let size = self.cells.len() as i8;
@@ -70,7 +69,7 @@ impl Organism {
         new_organism.x = self.x + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8); // random offset from parent is proportional to the size of the parent
         new_organism.y = self.y + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8);
         new_organism.z = self.z + rand::thread_rng().gen_range((size*-1)*2 as i8 .. (size*2)+1 as i8);
-        println!("reproducing");
+        // println!("reproducing");
         new_organism
     }
     pub fn produce_food(&mut self) -> Option<Block> {
@@ -106,7 +105,7 @@ impl Organism {
         // println!("An organism added a cell");
     }
     pub fn remove_random_cell(&mut self) {
-        println!("Removing a cell");
+        // println!("Removing a cell");
         let mut rng = rand::thread_rng();
         if self.cells.len() > 1 {
             let cell_index = rng.gen_range(0..self.cells.len());
@@ -128,7 +127,7 @@ impl Organism {
                     self.energy += 10;
                 }
                 to_remove.push(i);
-                println!("Eating a block, gained energy: {}", self.energy);
+                // println!("Eating a block, gained energy: {}", self.energy);
             }
         }
     
@@ -154,13 +153,16 @@ impl Organism {
     pub fn get_nearby_organisms<'a>(&self, organisms: &'a Vec<Organism>) -> Vec<&'a Organism> {
         let mut nearby_organisms = Vec::new();
         for organism in organisms {
-            if (self.x - organism.x).abs() <= 2 && 
-                (self.y - organism.y).abs() <= 2 && 
-                (self.z - organism.z).abs() <= 2 {
+            if (self.x - organism.x).abs() <= 1 && 
+                (self.y - organism.y).abs() <= 1 && 
+                (self.z - organism.z).abs() <= 1 {
                 nearby_organisms.push(organism);
             }
+            else {
+                // print!("x")
+            }
         }
-        println!("{} nearby organisms", nearby_organisms.len());
+        // println!("{} nearby organisms", nearby_organisms.len());
         nearby_organisms
     }
     
@@ -211,7 +213,17 @@ impl Organism {
             println!("Moving towards food");
         } else {
             self.teleport_random();
-            println!("Random movement");
+            // println!("Random movement");
+        }
+    }
+    pub fn damage_nearby_organisms(&self, organisms: &mut Vec<Organism>) {
+        for organism in organisms {
+            if (self.x - organism.x).abs() <= 1 && 
+                (self.y - organism.y).abs() <= 1 && 
+                (self.z - organism.z).abs() <= 1 {
+                if organism.health > 10 { organism.health -= 10; } else { organism.health = 0; }
+                println!("Damaging nearby organism");
+            }
         }
     }
 }
