@@ -50,9 +50,11 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             }
         }
         if rand::thread_rng().gen_range(0..CHANCE_OF_FOOD_PRODUCTION) == 0 {
-            if max_blocks > blocks.len() {
-                if let Some(block) = organism.produce_food() {
-                    blocks.push(block);
+            if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Producer(_))) {
+                if max_blocks > blocks.len() {
+                    if let Some(block) = organism.produce_food() {
+                        blocks.push(block);
+                    }
                 }
             }
         }
