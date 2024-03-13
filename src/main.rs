@@ -35,11 +35,15 @@ static CHANCE_OF_REPRODUCTION: i8 = 30;              // how likely an organism i
 static CHANCE_OF_MUTATION: i8 = 100;                 // random mutation apart from reproduction
 static CHANCE_OF_FOOD_PRODUCTION: i8 = 30;           // chance of a producer cell producing food
 
+static MAX_ORGANISMS: usize = 100;                  // soft limit; multiple organisms can be created in a single tick
+static MAX_BLOCKS: usize = 100;                     // this can by bypassed when an organism dies
+
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();    
 
     for organism in organisms.iter_mut() {
 
+        // reproduce
         if rand::thread_rng().gen_range(0..CHANCE_OF_REPRODUCTION) == 0 {
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
@@ -49,6 +53,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 new_organisms.push(new_organism);
             }
         }
+        // produce food
         if rand::thread_rng().gen_range(0..CHANCE_OF_FOOD_PRODUCTION) == 0 {
             if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Producer(_))) {
                 if max_blocks > blocks.len() {
@@ -58,13 +63,17 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 }
             }
         }
-        if rand::thread_rng().gen_range(0..CHANCE_OF_MUTATION) == 0 { // 0.1% chance of random mutation
+        // random mutation
+        if rand::thread_rng().gen_range(0..CHANCE_OF_MUTATION) == 0 {
             organism.mutate();
         }
 
-        // Eats one food block if adjacent to one
-        organism.eat(&mut *blocks);
+        // Eats one food block if adjacent to one and has an eater cell
+        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eater)) {
+            organism.eat(&mut *blocks);
+        }
 
+        // Housekeeping
         if organism.lifespan > 0 {
             organism.lifespan -= 1;
         }
@@ -82,8 +91,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     }
 
     let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
-
-
             // damage nearby organisms if there are killer cells
     let mut to_damage = Vec::new();
     for (i, organism) in organisms.iter_mut().enumerate() {
@@ -115,7 +122,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     // println!("Number of organisms: {}", organisms.len());
     // println!("Number of blocks: {}", blocks.len());
 }
-// main
 
 fn main() {
     let (tx, rx) = channel();
@@ -128,9 +134,6 @@ fn main() {
     let organisms_clone = Arc::clone(&organisms);
     let blocks_clone = Arc::clone(&blocks);
 
-    let max_organisms = 200;
-    let max_blocks = 200;
-
     thread::spawn(move || {
         loop {
             thread::sleep(Duration::from_millis(200)); // Sleep
@@ -138,7 +141,7 @@ fn main() {
             let mut new_organisms = Vec::new();
             let mut new_blocks = Vec::new();
 
-            update_world(&mut *organisms_clone.lock().unwrap(), &mut new_organisms, &mut *blocks_clone.lock().unwrap(), max_organisms, max_blocks, &mut sim_world);
+            update_world(&mut *organisms_clone.lock().unwrap(), &mut new_organisms, &mut *blocks_clone.lock().unwrap(), MAX_ORGANISMS, MAX_BLOCKS, &mut sim_world);
 
             tx.send((new_organisms, new_blocks)).unwrap();
         }
@@ -179,7 +182,7 @@ fn main() {
             for cell in &organism.cells { // render cells
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
                 match cell.cell_type {
-                    CellType::Brain(_) => cube.set_color(0.9, 0.4, 0.4),
+                    CellType::Brain(_) => cube.set_color(0.9, 0.2, 0.4),
                     CellType::Eye(_) => {
                         cube.set_color(1.0, 1.0, 1.0);
                         // a is the point of the eye: organism.x + cell.local_x, organism.y + cell.local_y, organism.z + cell.local_z
@@ -207,8 +210,8 @@ fn main() {
             for block in &*blocks.lock().unwrap() {
                 let mut cube = parent.add_cube(1.0, 1.0, 1.0);
                 match block.block_type {
-                    BlockType::Food => cube.set_color(0.0, 0.5, 0.5),
-                    BlockType::Wall => cube.set_color(0.2, 0.2, 0.2),
+                    BlockType::Food => cube.set_color(0.2, 0.3, 0.3),
+                    BlockType::Wall => cube.set_color(0.6, 0.6, 0.6),
                 };
                 cube.append_translation(&Translation3::new(block.x as f32, block.y as f32, block.z as f32));
             }

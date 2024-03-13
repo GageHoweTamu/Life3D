@@ -173,10 +173,27 @@ impl Organism {
             if (self.x - block.x).abs() <= 1 && 
                 (self.y - block.y).abs() <= 1 && 
                 (self.z - block.z).abs() <= 1 {
+                    println!("Block found at: {}, {}, {}; Organism at: {}, {}, {}", block.x, block.y, block.z, self.x, self.y, self.z);
                 nearby_blocks.push(block);
             }
         }
         nearby_blocks
+    }
+    pub fn get_hunger(&self) -> Option<f32> {
+        for cell in &self.cells {
+            if let CellType::Brain(brain) = &cell.cell_type {
+                return Some(brain.hunger);
+            }
+        }
+        None
+    }
+    pub fn get_aggression(&self) -> Option<f32> {
+        for cell in &self.cells {
+            if let CellType::Brain(brain) = &cell.cell_type {
+                return Some(brain.aggression);
+            }
+        }
+        None
     }
     pub fn move_better(&mut self, organisms: &Vec<Organism>, blocks: &Vec<Block>) {
         let eye = self.cells.iter().filter(|cell| matches!(cell.cell_type, CellType::Eye(_))).choose(&mut rand::thread_rng()).unwrap();
@@ -203,20 +220,24 @@ impl Organism {
         }).count();
     
         let killers = self.cells.iter().filter(|cell| matches!(cell.cell_type, CellType::Killer)).count();
-        let decision : f32 = (food_in_sight as f32 * 0.5) + (killers as f32 * 0.5) - (danger_in_sight as f32);
+        // brain
+        let hunger = self.get_hunger().unwrap();
+        let aggression = self.get_aggression().unwrap();
+        let decision : f32 = (food_in_sight as f32 * 0.1 * hunger) + (killers as f32 * 0.2 * aggression) - (danger_in_sight as f32);
 
         if decision < -0.5 {
             self.shift(-dx, -dy, -dz);
-            println!("Running away from danger");
+            // println!("Running away from danger");
         } else if decision > 0.5 {
             self.shift(dx, dy, dz);
-            println!("Moving towards food");
+            // println!("Moving towards food, or to kill a nearby organism");
         } else {
             self.teleport_random();
         }
     }
     pub fn damage_nearby_organisms(&self, organisms: &mut Vec<Organism>) {
         for organism in organisms {
+            println!("subtracting self.x: {}, organism.x: {}, self.y: {}, organism.y: {}, self.z: {}, organism.z: {}", self.x, organism.x, self.y, organism.y, self.z, organism.z);
             if (self.x - organism.x).abs() <= 1 && 
                 (self.y - organism.y).abs() <= 1 && 
                 (self.z - organism.z).abs() <= 1 {
@@ -225,30 +246,6 @@ impl Organism {
             }
         }
     }
-
-        /* 1: x, 2: -x, 3: y, 4: -y, 5: z, 6: -z */
-        // step 1: choose a random direction
-        // step 2: rotate the cells' position around the organism. eg. (0, 1, 1) -> (1, 0, 1)
-        // step 3: change the cells' rotation. eg. 2 -> 4 etc.
-        // Done!
-
-        /*
-        pub struct Cell {
-            pub cell_type: CellType,
-            pub rotation: i8,
-            pub local_x: i8,
-            pub local_y: i8,
-            pub local_z: i8,
-        }
-        let (dx, dy, dz) = match rotation {
-            0 => (1, 0, 0),  // x
-            1 => (-1, 0, 0), // -x
-            2 => (0, 1, 0),  // y
-            3 => (0, -1, 0), // -y
-            4 => (0, 0, 1),  // z
-            _ => (0, 0, -1), // -z
-        };
-         */
 
     pub fn rotate(&mut self) {
         let direction = rand::random::<u8>() % 6; // Random direction between 0 and 5
