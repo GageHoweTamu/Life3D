@@ -30,6 +30,7 @@ use std::thread;
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();
     // sim_world.clear(); // this causes a slowdown
+    
 
     for organism in organisms.iter_mut() {
         // println!("Organism energy: {}", organism.energy);
@@ -53,19 +54,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
         }
         if rand::thread_rng().gen_range(0..1000) == 0 { // 0.1% chance of random mutation
             organism.mutate();
-            // println!("A random mutation occurred!")
-        }
-
-        // Check for mover
-        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
-            // Check for Eye
-            if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
-                organism.move_better(organisms, blocks);
-            }
-            // If it doesn't have an Eye cell, move randomly
-            else {
-                organism.teleport_random();
-            }
         }
 
         // Eats one food block if adjacent to one
@@ -85,6 +73,23 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 }
             }
         }
+    }
+
+    let mut to_move_better = Vec::new();
+    let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
+
+    for (i, organism) in organisms.iter_mut().enumerate() {
+
+        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
+            if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eye(_))) {
+                to_move_better.push(i);
+            }
+            else { organism.teleport_random(); }
+        }
+    }
+
+    for i in to_move_better {
+        organisms[i].move_better(organisms_clone, blocks);
     }
     organisms.retain(|organism| { // Remove dead organisms
         let result = !organism.is_dead();

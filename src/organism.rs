@@ -124,7 +124,9 @@ impl Organism {
     
         for (i, block) in nearby_blocks.iter().enumerate() {
             if matches!(block.block_type, BlockType::Food) {
-                self.energy += 10;
+                if self.energy < 100 {
+                    self.energy += 10;
+                }
                 to_remove.push(i);
                 println!("Eating a block, gained energy: {}", self.energy);
             }
