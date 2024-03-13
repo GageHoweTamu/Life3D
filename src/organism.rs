@@ -57,6 +57,11 @@ impl Organism {
         self.x += dx*num_mover_cells as i8;
         self.y += dy*num_mover_cells as i8;
         self.z += dz*num_mover_cells as i8;
+        // 50% chance to rotate
+        if rng.gen_range(0..2) == 0 {
+            self.rotate();
+            println!("organism rotated :)")
+        }
 
     }
     pub fn reproduce(&mut self) -> Organism {
@@ -79,14 +84,14 @@ impl Organism {
                 let dx = rng.gen_range(-1..2);
                 let dy = rng.gen_range(-1..2);
                 let dz = rng.gen_range(-1..2);
-                println!("Producing food");
+                // println!("Producing food");
                 return Some(Block::new(BlockType::Food, self.x + dx, self.y + dy, self.z + dz));
             }
         }
         None
     }
     pub fn add_random_cell(&mut self) {
-        println!("Adding a cell");
+        // println!("Adding a cell");
         let mut rng = rand::thread_rng();
         let cell_type = match rng.gen_range(0..7) { // add random rotation
             0 => CellType::Eye(Eye {}),
@@ -141,8 +146,6 @@ impl Organism {
         } else {
             false }
     }
-    // when called, turn the cells into food blocks
-    // and destroy the organism
     pub fn kill(&self) -> Vec<Block> {
         let mut blocks = Vec::new();
         for cell in &self.cells {
@@ -158,21 +161,15 @@ impl Organism {
                 (self.z - organism.z).abs() <= 1 {
                 nearby_organisms.push(organism);
             }
-            else {
-                // print!("x")
-            }
         }
-        // println!("{} nearby organisms", nearby_organisms.len());
         nearby_organisms
     }
-    
-    // move this to eater
     pub fn get_nearby_blocks<'a>(&self, blocks: &'a Vec<Block>) -> Vec<&'a Block> {
         let mut nearby_blocks = Vec::new();
         for block in blocks {
-            if (self.x - block.x).abs() <= 2 && 
-                (self.y - block.y).abs() <= 2 && 
-                (self.z - block.z).abs() <= 2 {
+            if (self.x - block.x).abs() <= 1 && 
+                (self.y - block.y).abs() <= 1 && 
+                (self.z - block.z).abs() <= 1 {
                 nearby_blocks.push(block);
             }
         }
@@ -207,13 +204,12 @@ impl Organism {
 
         if decision < -0.5 {
             self.shift(-dx, -dy, -dz);
-            println!("Running away");
+            println!("Running away from danger");
         } else if decision > 0.5 {
             self.shift(dx, dy, dz);
             println!("Moving towards food");
         } else {
             self.teleport_random();
-            // println!("Random movement");
         }
     }
     pub fn damage_nearby_organisms(&self, organisms: &mut Vec<Organism>) {
@@ -222,8 +218,55 @@ impl Organism {
                 (self.y - organism.y).abs() <= 1 && 
                 (self.z - organism.z).abs() <= 1 {
                 if organism.health > 10 { organism.health -= 10; } else { organism.health = 0; }
-                println!("Damaging nearby organism");
+                // println!("Damaging nearby organism");
             }
         }
     }
+
+        /* 1: x, 2: -x, 3: y, 4: -y, 5: z, 6: -z */
+        // step 1: choose a random direction
+        // step 2: rotate the cells' position around the organism. eg. (0, 1, 1) -> (1, 0, 1)
+        // step 3: change the cells' rotation. eg. 2 -> 4 etc.
+        // Done!
+
+        /*
+        pub struct Cell {
+            pub cell_type: CellType,
+            pub rotation: i8,
+            pub local_x: i8,
+            pub local_y: i8,
+            pub local_z: i8,
+        }
+        let (dx, dy, dz) = match rotation {
+            0 => (1, 0, 0),  // x
+            1 => (-1, 0, 0), // -x
+            2 => (0, 1, 0),  // y
+            3 => (0, -1, 0), // -y
+            4 => (0, 0, 1),  // z
+            _ => (0, 0, -1), // -z
+        };
+         */
+
+    pub fn rotate(&mut self) {
+        let direction = rand::random::<u8>() % 6; // Random direction between 0 and 5
+    
+        for cell in &mut self.cells {
+            let (new_x, new_y, new_z) = match direction {
+                0 => (cell.local_x, -cell.local_z, cell.local_y),  // x
+                1 => (cell.local_x, cell.local_z, -cell.local_y),  // -x
+                2 => (-cell.local_z, cell.local_y, cell.local_x),  // y
+                3 => (cell.local_z, cell.local_y, -cell.local_x),  // -y
+                4 => (cell.local_x, cell.local_y, cell.local_z),  // z
+                _ => (-cell.local_x, cell.local_y, cell.local_z),  // -z
+            };
+    
+            cell.local_x = new_x;
+            cell.local_y = new_y;
+            cell.local_z = new_z;
+    
+            // Update cell rotation
+            cell.rotation = (cell.rotation + direction as i8) % 6;
+        }
+    }
+        
 }

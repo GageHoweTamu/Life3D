@@ -24,8 +24,10 @@ use std::thread;
 
 /*
 TODO:
-- [ ] Fix issue where organisms eat food without being adjacent to it
+- [x] Fix issue where organisms eat food without being adjacent to it
 - [ ] Add text rendering for fps, total organisms, etc.
+- [x] implement organism.rotate()
+- [ ] make camera rotate around the simulation
 */
 
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
@@ -63,7 +65,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
             organism.energy -= 2;
         }
         if organism.is_dead() {
-            println!("Organism died");
+            // println!("Organism died");
             for val in organism.kill() {
                 if blocks.len() < max_blocks {
                     blocks.push(val);       // Add the dead organism's cells as food blocks
