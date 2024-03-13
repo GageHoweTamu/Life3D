@@ -31,9 +31,9 @@ TODO:
 */
 
 // 1 in x chances
-static CHANCE_OF_REPRODUCTION: i8 = 30;              // how likely an organism is to reproduce
-static CHANCE_OF_MUTATION: i8 = 100;                 // random mutation apart from reproduction
-static CHANCE_OF_FOOD_PRODUCTION: i8 = 30;           // chance of a producer cell producing food
+static CHANCE_OF_REPRODUCTION: i8 = 30;             // how likely an organism is to reproduce
+static CHANCE_OF_MUTATION: i8 = 100;                // random mutation apart from reproduction
+static CHANCE_OF_FOOD_PRODUCTION: i8 = 30;          // chance of a producer cell producing food
 
 static MAX_ORGANISMS: usize = 100;                  // soft limit; multiple organisms can be created in a single tick
 static MAX_BLOCKS: usize = 100;                     // this can by bypassed when an organism dies

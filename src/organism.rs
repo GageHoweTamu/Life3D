@@ -173,7 +173,7 @@ impl Organism {
             if (self.x - block.x).abs() <= 1 && 
                 (self.y - block.y).abs() <= 1 && 
                 (self.z - block.z).abs() <= 1 {
-                    println!("Block found at: {}, {}, {}; Organism at: {}, {}, {}", block.x, block.y, block.z, self.x, self.y, self.z);
+                // println!("Block found at: {}, {}, {}; Organism at: {}, {}, {}", block.x, block.y, block.z, self.x, self.y, self.z);
                 nearby_blocks.push(block);
             }
         }
