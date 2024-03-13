@@ -26,7 +26,8 @@ impl Organism {
         };
         let brain_cell = Cell::new(CellType::Brain(brain), 0, 0, 0, 0);
         Organism {
-            cells: vec![brain_cell, Cell::new(CellType::Eater, 0, 1, 1, 0)],
+            // cells: vec![brain_cell, Cell::new(CellType::Mover, 0, 1, 1, 0)],
+            cells: vec![brain_cell],
             health: 100,
             energy: 100,
             lifespan: 100,
@@ -60,7 +61,7 @@ impl Organism {
         // 50% chance to rotate
         if rng.gen_range(0..2) == 0 {
             self.rotate();
-            println!("organism rotated :)")
+            // println!("organism rotated :)")
         }
 
     }
@@ -109,11 +110,13 @@ impl Organism {
         self.cells.push(Cell::new(cell_type, random_rotation, dx, dy, dz));
         // println!("An organism added a cell");
     }
-    pub fn remove_random_cell(&mut self) {
-        // println!("Removing a cell");
+    pub fn remove_random_cell(&mut self) { // removes a random cell, except the brain
         let mut rng = rand::thread_rng();
         if self.cells.len() > 1 {
             let cell_index = rng.gen_range(0..self.cells.len());
+            if matches!(self.cells[cell_index].cell_type, CellType::Brain(_)) {
+                return;
+            }
             self.cells.remove(cell_index);
         }
     }

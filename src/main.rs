@@ -30,12 +30,17 @@ TODO:
 - [ ] make camera rotate around the simulation
 */
 
+// 1 in x chances
+static CHANCE_OF_REPRODUCTION: i8 = 30;              // how likely an organism is to reproduce
+static CHANCE_OF_MUTATION: i8 = 100;                 // random mutation apart from reproduction
+static CHANCE_OF_FOOD_PRODUCTION: i8 = 30;           // chance of a producer cell producing food
+
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();    
 
     for organism in organisms.iter_mut() {
 
-        if rand::thread_rng().gen_range(0..10) == 0 { // 1% chance of reproduction
+        if rand::thread_rng().gen_range(0..CHANCE_OF_REPRODUCTION) == 0 {
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
                 if rand::thread_rng().gen_range(0..2) == 0 {
@@ -44,14 +49,14 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 new_organisms.push(new_organism);
             }
         }
-        if rand::thread_rng().gen_range(0..100) == 0 { // 1% chance of food production
+        if rand::thread_rng().gen_range(0..CHANCE_OF_FOOD_PRODUCTION) == 0 {
             if max_blocks > blocks.len() {
                 if let Some(block) = organism.produce_food() {
                     blocks.push(block);
                 }
             }
         }
-        if rand::thread_rng().gen_range(0..1000) == 0 { // 0.1% chance of random mutation
+        if rand::thread_rng().gen_range(0..CHANCE_OF_MUTATION) == 0 { // 0.1% chance of random mutation
             organism.mutate();
         }
 
@@ -189,10 +194,11 @@ fn main() {
                         window.draw_line(&a, &b, &Point3::new(1.0, 1.0, 1.0));
                     },
                     CellType::Armor => cube.set_color(1.0, 1.0, 0.0),
-                    CellType::Killer => cube.set_color(1.0, 0.0, 0.0),
-                    CellType::Eater => cube.set_color(0.8, 0.8, 0.0),
-                    CellType::Mover => cube.set_color(0.0, 0.0, 1.0),
-                    CellType::Producer(_) => cube.set_color(0.0, 1.0, 0.0),
+                    CellType::Killer => cube.set_color(1.0, 0.0, 0.0),      // killers are red
+                    CellType::Eater => cube.set_color(1.0, 0.0, 1.0),       // eaters are purple
+                    CellType::Mover => cube.set_color(0.0, 0.0, 1.0),       // movers are blue
+                    CellType::Producer(_) => cube.set_color(0.0, 1.0, 0.0), // producers are green
+                                                                            // eyes are white
                 };
                 cube.append_translation(&Translation3::new((organism.x + cell.local_x) as f32, (organism.y + cell.local_y) as f32, (organism.z + cell.local_z) as f32));
             }
