@@ -1,6 +1,3 @@
 
-![hi](https://www.youtube.com/watch?v=9oKNQjAvRQk)
-<iframe width="560" height="315" src="https://www.youtube.com/embed/9oKNQjAvRQk" frameborder="0" allowfullscreen></iframe>
 
-
-```cargo build --target x86_64-apple-darwin``` - compile for testing on apple ARM
+https://github.com/GageHoweTamu/Life3D/assets/116420022/ae5d4335-b471-45fc-9828-0f89dd35b316
