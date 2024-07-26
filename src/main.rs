@@ -31,7 +31,7 @@ TODO:
 */
 
 // 1 in x chances
-static CHANCE_OF_REPRODUCTION: i8 = 30;             // how likely an organism is to reproduce
+static CHANCE_OF_REPRODUCTION: i8 = 20;             // how likely an organism is to reproduce
 static CHANCE_OF_MUTATION: i8 = 100;                // random mutation apart from reproduction
 static CHANCE_OF_FOOD_PRODUCTION: i8 = 30;          // chance of a producer cell producing food
 
@@ -44,7 +44,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
     for organism in organisms.iter_mut() {
 
         // reproduce
-        if rand::thread_rng().gen_range(0..CHANCE_OF_REPRODUCTION) == 0 {
+        if rand::thread_rng().gen_range(0..(CHANCE_OF_REPRODUCTION)) == 0 {
             if organisms_len < max_organisms {
                 let mut new_organism = organism.reproduce();
                 if rand::thread_rng().gen_range(0..2) == 0 {
@@ -88,7 +88,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 }
             }
         }
-    } 
+    }
 
     let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
             // damage nearby organisms if there are killer cells
