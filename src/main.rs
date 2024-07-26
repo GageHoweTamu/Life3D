@@ -25,9 +25,9 @@ use std::thread;
 /*
 TODO:
 - [x] Fix issue where organisms eat food without being adjacent to it
-- [ ] Add text rendering for fps, total organisms, etc.
+- [x] Add text rendering for fps, total organisms, etc.
 - [x] implement organism.rotate()
-- [ ] make camera rotate around the simulation
+- [x] make camera rotate around the simulation
 */
 
 // 1 in x chances
@@ -88,7 +88,7 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
                 }
             }
         }
-    }
+    } 
 
     let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
             // damage nearby organisms if there are killer cells

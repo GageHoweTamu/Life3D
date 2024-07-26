@@ -237,7 +237,7 @@ impl Organism {
     }
     pub fn damage_nearby_organisms(&self, organisms: &mut Vec<Organism>) {
         for organism in organisms {
-            println!("subtracting self.x: {}, organism.x: {}, self.y: {}, organism.y: {}, self.z: {}, organism.z: {}", self.x, organism.x, self.y, organism.y, self.z, organism.z);
+            // println!("subtracting self.x: {}, organism.x: {}, self.y: {}, organism.y: {}, self.z: {}, organism.z: {}", self.x, organism.x, self.y, organism.y, self.z, organism.z);
             if (self.x - organism.x).abs() <= 1 && 
                 (self.y - organism.y).abs() <= 1 && 
                 (self.z - organism.z).abs() <= 1 {
