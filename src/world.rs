@@ -2,6 +2,7 @@
 use crate::organism::Organism;
 use crate::block::Block;
 use crate::cell::Cell;
+use crate::octrees::Octree;
 
 #[derive(Clone)]
 pub enum Entity {
@@ -9,67 +10,22 @@ pub enum Entity {
     Cell(Cell),
 }
 
-pub struct World {
-    pub grid: Vec<Vec<Vec<Option<Entity>>>>,
-    pub width: usize,
-    pub height: usize,
-    pub depth: usize,
+struct World {
+    width: usize,
+    height: usize,
+    depth: usize,
+    octree: Octree,
 }
+
 impl World {
-    pub fn new(width: usize, height: usize, depth: usize) -> World {
-        let grid = vec![vec![vec![None; depth]; height]; width]; // declares a 3D grid of empty entities
+    fn new(width: usize, height: usize, depth: usize) -> Self {
         World {
-            grid,
             width,
             height,
             depth,
+            octree: Octree::new([width as f32 / 2.0, height as f32 / 2.0, depth as f32 / 2.0], 
+                                 width.max(height).max(depth) as f32, 
+                                 1.0),
         }
-    }
-    pub fn set_entity(&mut self, x: usize, y: usize, z: usize, entity: Option<Entity>) {
-        if x < self.width && y < self.height && z < self.depth {
-            self.grid[x][y][z] = entity;
-        } else {
-            // println!("OOB in set_entity ");
-        }
-        // println!("Entity set at {}, {}, {}", x, y, z);
-    }
-
-    pub fn get_entity(&self, x: usize, y: usize, z: usize) -> Option<&Entity> {
-        if x < self.width && y < self.height && z < self.depth {
-            self.grid[x][y][z].as_ref()
-        } else {
-            // print!("OOB in get_entity ");
-            None
-        }
-    }
-    pub fn get_adjacent_entities(&self, x: usize, y: usize, z: usize) -> Vec<((usize, usize, usize), &Entity)> {
-        let mut adjacent_entities = Vec::new();
-        let offsets = [
-            (-1, -1, -1), (0, -1, -1), (1, -1, -1),
-            (-1, 0, -1), (0, 0, -1), (1, 0, -1),
-            (-1, 1, -1), (0, 1, -1), (1, 1, -1),
-            (-1, -1, 0), (0, -1, 0), (1, -1, 0),
-            (-1, 0, 0), (1, 0, 0),
-            (-1, 1, 0), (0, 1, 0), (1, 1, 0),
-            (-1, -1, 1), (0, -1, 1), (1, -1, 1),
-            (-1, 0, 1), (0, 0, 1), (1, 0, 1),
-            (-1, 1, 1), (0, 1, 1), (1, 1, 1),
-        ];
-
-        for (dx, dy, dz) in offsets.iter() {
-            let nx = (x as isize + dx) as usize;
-            let ny = (y as isize + dy) as usize;
-            let nz = (z as isize + dz) as usize;
-
-            if let Some(entity) = self.get_entity(nx, ny, nz) {
-                adjacent_entities.push(((nx, ny, nz), entity));
-            }
-        }
-
-        adjacent_entities
-    }
-    pub fn clear(&mut self) {
-        self.grid = vec![vec![vec![None; self.depth]; self.height]; self.width];
-        // println!("World was cleared");
     }
 }

@@ -12,11 +12,13 @@ mod organism;
 mod cell;
 mod world;
 mod block;
+mod octrees;
 use organism::*;
 use cell::*;
 use world::*;
 use world::*;
 use block::*;
+use octrees::*;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use std::time::Duration;
@@ -41,66 +43,41 @@ static MAX_BLOCKS: usize = 100;                     // this can by bypassed when
 fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>, blocks: &mut Vec<Block>, max_organisms: usize, max_blocks: usize, sim_world: &mut World) {
     let organisms_len = organisms.len();    
 
-    for organism in organisms.iter_mut() {
+    // Clear and rebuild the octree
+    sim_world.octree = Octree::new([sim_world.width as f32 / 2.0, sim_world.height as f32 / 2.0, sim_world.depth as f32 / 2.0], 
+                                    sim_world.width.max(sim_world.height).max(sim_world.depth) as f32, 
+                                    1.0);
 
-        // reproduce
-        if rand::thread_rng().gen_range(0..(CHANCE_OF_REPRODUCTION)) == 0 {
-            if organisms_len < max_organisms {
-                let mut new_organism = organism.reproduce();
-                if rand::thread_rng().gen_range(0..2) == 0 {
-                    new_organism.mutate(); // reproduced organisms have a 50% chance of mutation
-                }
-                new_organisms.push(new_organism);
-            }
-        }
-        // produce food
-        if rand::thread_rng().gen_range(0..CHANCE_OF_FOOD_PRODUCTION) == 0 {
-            if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Producer(_))) {
-                if max_blocks > blocks.len() {
-                    if let Some(block) = organism.produce_food() {
-                        blocks.push(block);
-                    }
-                }
-            }
-        }
-        // random mutation
-        if rand::thread_rng().gen_range(0..CHANCE_OF_MUTATION) == 0 {
-            organism.mutate();
-        }
-
-        // Eats one food block if adjacent to one and has an eater cell
-        if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Eater)) {
-            organism.eat(&mut *blocks);
-        }
-
-        // Housekeeping
-        if organism.lifespan > 0 {
-            organism.lifespan -= 1;
-        }
-        if organism.energy > 0 {
-            organism.energy -= 2;
-        }
-        if organism.is_dead() {
-            // println!("Organism died");
-            for val in organism.kill() {
-                if blocks.len() < max_blocks {
-                    blocks.push(val);       // Add the dead organism's cells as food blocks
-                }
-            }
-        }
+    for (i, organism) in organisms.iter().enumerate() {
+        sim_world.octree.insert(i, organism.position);
     }
 
-    let organisms_clone = &(organisms.clone()); // avoids borrowing issues; maybe there's a better way though
-            // damage nearby organisms if there are killer cells
+    // ... (rest of the update logic)
+
+    // For operations that require nearby organisms, use the octree
     let mut to_damage = Vec::new();
-    for (i, organism) in organisms.iter_mut().enumerate() {
+    for (i, organism) in organisms.iter().enumerate() {
         if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Killer)) {
             to_damage.push(i);
         }
     }
     for i in to_damage {
-        organisms_clone[i].damage_nearby_organisms(organisms);
+        let query_box = [
+            organisms[i].position[0] - DAMAGE_RANGE,
+            organisms[i].position[1] - DAMAGE_RANGE,
+            organisms[i].position[2] - DAMAGE_RANGE,
+            organisms[i].position[0] + DAMAGE_RANGE,
+            organisms[i].position[1] + DAMAGE_RANGE,
+            organisms[i].position[2] + DAMAGE_RANGE,
+        ];
+        let nearby_organisms = sim_world.octree.query(&query_box);
+        for &j in &nearby_organisms {
+            if i != j {
+                organisms[j].take_damage(DAMAGE_AMOUNT);
+            }
+        }
     }
+
     let mut to_move_better = Vec::new();
     for (i, organism) in organisms.iter_mut().enumerate() {
         if organism.cells.iter().any(|cell| matches!(cell.cell_type, CellType::Mover)) {
@@ -125,8 +102,6 @@ fn update_world(organisms: &mut Vec<Organism>, new_organisms: &mut Vec<Organism>
 
 fn main() {
     let (tx, rx) = channel();
-
-    let mut sim_world = World::new(128, 128, 128);
 
     let organisms = Arc::new(Mutex::new(vec![Organism::new()])); // Create a vec with one new organism
     let blocks = Arc::new(Mutex::new(vec![]));
